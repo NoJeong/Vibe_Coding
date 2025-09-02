@@ -1,0 +1,109 @@
+body {
+    font-family: 'Malgun Gothic', sans-serif;
+    background-color: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.report-container {
+    width: 800px;
+    background: #fff;
+    padding: 40px;
+    border: 1px solid #ccc;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+header h1 {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 2.5em;
+}
+
+.company-info {
+    border: 1px solid #eee;
+    padding: 15px;
+    margin-bottom: 30px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 30px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+}
+
+thead {
+    background-color: #f9f9f9;
+}
+
+td:nth-child(2),
+td:nth-child(3),
+td:nth-child(4) {
+    text-align: right;
+}
+
+footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: 40px;
+}
+
+.summary {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.company-seal {
+    position: relative;
+    width: 150px;
+    text-align: center;
+}
+
+.company-name {
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.seal {
+    position: absolute;
+    border: 3px solid red;
+    color: red;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    font-size: 1.5em;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    top: -20px;
+    right: -30px;
+    transform: rotate(-15deg);
+    opacity: 0.8;
+}
+
+@media print {
+    body {
+        display: block;
+        background-color: #fff;
+        padding: 0;
+        margin: 0;
+    }
+    .report-container {
+        box-shadow: none;
+        border: none;
+        width: 18cm; /* A4-friendly width */
+        margin: 0 auto; /* Center the container */
+    }
+    tr {
+        page-break-inside: avoid;
+    }
+}
