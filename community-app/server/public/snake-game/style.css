@@ -1,0 +1,46 @@
+body {
+    font-family: 'Courier New', Courier, monospace;
+    text-align: center;
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.score-container {
+    display: flex;
+    justify-content: space-around;
+    width: 400px;
+    margin: 0 auto;
+}
+
+canvas {
+    border: 2px solid #333;
+    background-color: #000;
+    display: block;
+    margin: 10px auto;
+}
+
+#gameOverScreen {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 20px;
+    border-radius: 10px;
+    border: 2px solid #333;
+}
+
+#restartButton {
+    margin-top: 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #5cb85c;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+.hidden {
+    display: none;
+}
