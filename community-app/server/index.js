@@ -14,8 +14,35 @@ let posts = [
   { id: 1, title: '첫 번째 게시글', content: '안녕하세요! 첫 번째 게시글입니다.' },
   { id: 2, title: '두 번째 게시글', content: '리액트와 노드로 만드는 커뮤니티' },
   { id: 3, title: '세 번째 게시글', content: '페이지네이션을 추가해봅시다.' },
+  { id: 4, title: '네 번째 게시글', content: '더미 데이터입니다.' },
+  { id: 5, title: '다섯 번째 게시글', content: '더미 데이터입니다.' },
+  { id: 6, title: '여섯 번째 게시글', content: '더미 데이터입니다.' },
+  { id: 7, title: '일곱 번째 게시글', content: '더미 데이터입니다.' },
+  { id: 8, title: '여덟 번째 게시글', content: '더미 데이터입니다.' },
+  { id: 9, title: '아홉 번째 게시글', content: '더미 데이터입니다.' },
+  { id: 10, title: '열 번째 게시글', content: '더미 데이터입니다.' },
+  { id: 11, title: '열한 번째 게시글', content: '더미 데이터입니다.' },
+  { id: 12, title: '열두 번째 게시글', content: '더미 데이터입니다.' },
+  { id: 13, title: '열세 번째 게시글', content: '더미 데이터입니다.' },
+  { id: 14, title: '열네 번째 게시글', content: '더미 데이터입니다.' },
+  { id: 15, title: '열다섯 번째 게시글', content: '더미 데이터입니다.' },
+  { id: 16, title: '열여섯 번째 게시글', content: '더미 데이터입니다.' },
+  { id: 17, title: '열일곱 번째 게시글', content: '더미 데이터입니다.' },
+  { id: 18, title: '열여덟 번째 게시글', content: '더미 데이터입니다.' },
+  { id: 19, title: '열아홉 번째 게시글', content: '더미 데이터입니다.' },
+  { id: 20, title: '스무 번째 게시글', content: '더미 데이터입니다.' },
+  { id: 21, title: '스물한 번째 게시글', content: '더미 데이터입니다.' },
+  { id: 22, title: '스물두 번째 게시글', content: '더미 데이터입니다.' },
+  { id: 23, title: '스물세 번째 게시글', content: '더미 데이터입니다.' },
+  { id: 24, title: '스물네 번째 게시글', content: '더미 데이터입니다.' },
+  { id: 25, title: '스물다섯 번째 게시글', content: '더미 데이터입니다.' },
+  { id: 26, title: '스물여섯 번째 게시글', content: '더미 데이터입니다.' },
+  { id: 27, title: '스물일곱 번째 게시글', content: '더미 데이터입니다.' },
+  { id: 28, title: '스물여덟 번째 게시글', content: '더미 데이터입니다.' },
+  { id: 29, title: '스물아홉 번째 게시글', content: '더미 데이터입니다.' },
+  { id: 30, title: '서른 번째 게시글', content: '더미 데이터입니다.' }
 ];
-let nextId = 4;
+let nextId = 31;
 
 // 1. Get all posts (with pagination)
 app.get('/api/posts', (req, res) => {

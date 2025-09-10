@@ -9,8 +9,8 @@ const Header = () => {
       <nav>
         <ul style={{ listStyle: 'none', display: 'flex', gap: '1rem' }}>
           <li><Link to="/" style={{ color: '#fff', textDecoration: 'none' }}>게시판</Link></li>
-          <li><a href="/snake-game/index.html" style={{ color: '#fff', textDecoration: 'none' }}>뱀게임</a></li>
-          <li><a href="/pixel-shooter/index.html" style={{ color: '#fff', textDecoration: 'none' }}>픽셀슈터</a></li>
+          <li><Link to="/snake-game" style={{ color: '#fff', textDecoration: 'none' }}>뱀게임</Link></li>
+          <li><Link to="/pixel-shooter" style={{ color: '#fff', textDecoration: 'none' }}>픽셀슈터</Link></li>
         </ul>
       </nav>
     </header>
