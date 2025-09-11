@@ -1,19 +1,30 @@
-
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { LinkContainer } from 'react-router-bootstrap';
+import { Navbar, Nav, Container } from 'react-bootstrap';
 
 const Header = () => {
   return (
-    <header style={{ background: '#333', color: '#fff', padding: '1rem', display: 'flex', justifyContent: 'space-between' }}>
-      <h1><Link to="/" style={{ color: '#fff', textDecoration: 'none' }}>Community</Link></h1>
-      <nav>
-        <ul style={{ listStyle: 'none', display: 'flex', gap: '1rem' }}>
-          <li><Link to="/" style={{ color: '#fff', textDecoration: 'none' }}>게시판</Link></li>
-          <li><Link to="/snake-game" style={{ color: '#fff', textDecoration: 'none' }}>뱀게임</Link></li>
-          <li><Link to="/pixel-shooter" style={{ color: '#fff', textDecoration: 'none' }}>픽셀슈터</Link></li>
-        </ul>
-      </nav>
-    </header>
+    <Navbar bg="dark" variant="dark" expand="lg" fixed="top" collapseOnSelect>
+      <Container>
+        <LinkContainer to="/">
+          <Navbar.Brand>Community</Navbar.Brand>
+        </LinkContainer>
+        <Navbar.Toggle aria-controls="basic-navbar-nav" />
+        <Navbar.Collapse id="basic-navbar-nav">
+          <Nav className="ms-auto">
+            <LinkContainer to="/">
+              <Nav.Link>게시판</Nav.Link>
+            </LinkContainer>
+            <LinkContainer to="/snake-game">
+              <Nav.Link>뱀게임</Nav.Link>
+            </LinkContainer>
+            <LinkContainer to="/pixel-shooter">
+              <Nav.Link>픽셀슈터</Nav.Link>
+            </LinkContainer>
+          </Nav>
+        </Navbar.Collapse>
+      </Container>
+    </Navbar>
   );
 };
 

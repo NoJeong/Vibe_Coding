@@ -1,24 +1,28 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Form, Button, Spinner, Alert } from 'react-bootstrap';
+import { allMockPosts } from '../mockData.js'; // Import mock data
 
 const PostForm = () => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // For submission loading
+  const [isFetching, setIsFetching] = useState(false); // For fetching post to edit
   const [error, setError] = useState(null);
   const { id } = useParams();
   const navigate = useNavigate();
   const isEditing = !!id;
 
+  // <<-- 기존 fetch 로직은 주석 처리 -->>
+  /*
   useEffect(() => {
     if (isEditing) {
-      setLoading(true);
+      setIsFetching(true);
       const fetchPost = async () => {
         try {
           const response = await fetch(`http://localhost:3001/api/posts/${id}`);
           if (!response.ok) {
-            throw new Error('Post not found');
+            throw new Error('게시글을 찾을 수 없습니다.');
           }
           const data = await response.json();
           setTitle(data.title);
@@ -26,83 +30,112 @@ const PostForm = () => {
         } catch (error) {
           setError(error.message);
         } finally {
-          setLoading(false);
+          setIsFetching(false);
         }
       };
       fetchPost();
     }
   }, [isEditing, id]);
+  */
+
+  // <<-- 가짜 데이터를 사용하는 새로운 useEffect -->>
+  useEffect(() => {
+    if (isEditing) {
+      setIsFetching(true);
+      setError(null);
+      const timer = setTimeout(() => {
+        const postId = parseInt(id, 10);
+        const foundPost = allMockPosts.find(p => p.id === postId);
+        if (foundPost) {
+          setTitle(foundPost.title);
+          setContent(foundPost.content);
+        } else {
+          setError('해당 ID의 게시글을 찾을 수 없습니다.');
+        }
+        setIsFetching(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isEditing, id]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setIsLoading(true);
     setError(null);
 
-    const postData = { title, content };
+    // --- Mock Submission --- //
+    const timer = setTimeout(() => {
+      const postData = { title, content, id: isEditing ? parseInt(id, 10) : Date.now() };
+      console.log('Simulating post save: ', postData);
+      setIsLoading(false);
+      alert(isEditing ? '게시글 수정이 시뮬레이션되었습니다.' : '게시글 작성이 시뮬레이션되었습니다.');
+      // Navigate to the detail page (or the new post's page)
+      navigate(isEditing ? `/posts/${id}` : `/`);
+    }, 1000);
+    // --- End of Mock Submission --- //
 
-    const url = isEditing ? `http://localhost:3001/api/posts/${id}` : 'http://localhost:3001/api/posts';
-    const method = isEditing ? 'PUT' : 'POST';
-
-    try {
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(postData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save the post.');
-      }
-
-      const savedPost = await response.json();
-      navigate(isEditing ? `/posts/${id}` : `/posts/${savedPost.id}`);
-
-    } catch (error) {
-      setError(error.message);
-    } finally {
-      setLoading(false);
-    }
+    return () => clearTimeout(timer);
   };
 
-  if (loading && isEditing) {
-    return <div>Loading post...</div>;
-  }
-
-  if (error) {
-    return <div style={{ color: 'red' }}>Error: {error}</div>;
+  if (isFetching) {
+    return (
+      <div className="text-center">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </div>
+    );
   }
 
   return (
     <div>
-      <h2>{isEditing ? '글 수정' : '새 글 작성'}</h2>
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '1rem' }}>
-          <label htmlFor="title">제목</label>
-          <input
-            id="title"
+      <h1>{isEditing ? '글 수정' : '새 글 작성'}</h1>
+      <hr />
+      <Form onSubmit={handleSubmit}>
+        <Form.Group className="mb-3" controlId="formTitle">
+          <Form.Label>제목</Form.Label>
+          <Form.Control
             type="text"
+            placeholder="제목을 입력하세요"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
           />
-        </div>
-        <div style={{ marginBottom: '1rem' }}>
-          <label htmlFor="content">내용</label>
-          <textarea
-            id="content"
+        </Form.Group>
+
+        <Form.Group className="mb-3" controlId="formContent">
+          <Form.Label>내용</Form.Label>
+          <Form.Control
+            as="textarea"
+            rows={10}
+            placeholder="내용을 입력하세요"
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            rows="10"
             required
           />
+        </Form.Group>
+
+        {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
+
+        <div className="d-grid gap-2 d-md-flex justify-content-md-end">
+          <Button variant="secondary" onClick={() => navigate(-1)} disabled={isLoading}>
+            취소
+          </Button>
+          <Button variant="primary" type="submit" disabled={isLoading}>
+            {isLoading ? (
+              <Spinner
+                as="span"
+                animation="border"
+                size="sm"
+                role="status"
+                aria-hidden="true"
+              />
+            ) : (
+              isEditing ? '수정 완료' : '작성 완료'
+            )}
+          </Button>
         </div>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        <button type="submit" disabled={loading}>
-          {loading ? '저장 중...' : (isEditing ? '수정 완료' : '작성 완료')}
-        </button>
-      </form>
+      </Form>
     </div>
   );
 };
