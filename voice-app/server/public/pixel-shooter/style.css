@@ -1,0 +1,45 @@
+body {
+    font-family: 'Courier New', Courier, monospace;
+    text-align: center;
+    background-color: #f0f0f0;
+}
+
+canvas {
+    border: 2px solid #333;
+    background-color: #000;
+    display: block;
+    margin: 0 auto;
+}
+
+h1, p {
+    color: #333;
+}
+
+#gameOver {
+    margin-top: 20px;
+    padding: 20px;
+    border: 2px solid #333;
+    background-color: #fff;
+    display: none; /* Initially hidden */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+}
+
+#gameOver h2 {
+    margin: 0;
+    color: #d9534f;
+}
+
+#restartButton {
+    margin-top: 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #5cb85c;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}

@@ -1,0 +1,6 @@
+@echo off
+echo Starting backend server...
+start "Backend" cmd /c "cd server && npm start"
+
+echo Starting frontend client...
+start "Frontend" cmd /c "cd client && npm start"
