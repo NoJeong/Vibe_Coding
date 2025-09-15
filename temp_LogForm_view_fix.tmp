@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Form, Button, Spinner, Alert } from 'react-bootstrap';
 import moment from 'moment';
@@ -27,54 +27,24 @@ const LogForm = () => {
 
   const recognitionRef = useRef(null);
   const finalTranscriptRef = useRef('');
-  const sttListenerRef = useRef(null);
-  const isNative = typeof window !== 'undefined' && !!window.Capacitor?.isNativePlatform?.() && window.Capacitor.isNativePlatform();
-  const offlineStt = isNative ? window.Capacitor?.Plugins?.OfflineStt : null;
 
   const stopRecognition = () => {
-    if (offlineStt && isListening) {
-      try { offlineStt.stop(); } catch (_) {}
-    }
     if (recognitionRef.current) {
       recognitionRef.current.stop();
       recognitionRef.current = null;
+      setIsListening(false);
     }
-    if (sttListenerRef.current) {
-      try { sttListenerRef.current.remove(); } catch (_) {}
-      sttListenerRef.current = null;
-    }
-    setIsListening(false);
   };
 
-  const startRecognition = async () => {
-    if (isListening) {
+  const startRecognition = () => {
+    if (isListening || recognitionRef.current) {
       stopRecognition();
       return;
     }
 
-    if (offlineStt) {
-      try {
-        finalTranscriptRef.current = content;
-        sttListenerRef.current = await offlineStt.addListener('sttResult', ({ text, isFinal }) => {
-          if (typeof text !== 'string') return;
-          if (isFinal) {
-            finalTranscriptRef.current += text;
-            setContent(finalTranscriptRef.current);
-          } else {
-            setContent(finalTranscriptRef.current + text);
-          }
-        });
-        await offlineStt.start({ language: 'ko-KR' });
-        setIsListening(true);
-        return;
-      } catch (e) {
-        toast.error('오프라인 음성 인식을 시작할 수 없습니다. 웹 음성 인식으로 시도합니다.');
-      }
-    }
-
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      toast.error('이 환경에서는 웹 음성 인식을 지원하지 않습니다.');
+      toast.error('?듾슴?꾠겗?뽧꺀?╉궣??윹鶯계첀鈺섅굮?듐깮?쇈깉?쀣겍?꾠겲?쎼굯??);
       return;
     }
 
@@ -104,7 +74,7 @@ const LogForm = () => {
     };
 
     recognition.onerror = (event) => {
-      toast.error(`음성 인식 오류: ${event.error}`);
+      toast.error(`?뚯꽦 ?몄떇 ?ㅻ쪟: ${event.error}`);
       stopRecognition();
     };
 
@@ -121,8 +91,9 @@ const LogForm = () => {
     if (startVoice && !isEditing) {
       startRecognition();
     }
+    // Ensure recognition is stopped on unmount
     return () => stopRecognition();
-  }, []);
+  }, []); // Run only once on mount
 
   useEffect(() => {
     if (isEditing) {
@@ -134,8 +105,8 @@ const LogForm = () => {
         setContent(foundLog.content);
         setLogDate(moment(foundLog.created_at).format('YYYY-MM-DD'));
       } else {
-        toast.error('해당 기록을 찾을 수 없습니다.');
-        setError('해당 ID의 기록을 찾을 수 없습니다.');
+        toast.error('?대떦 湲곕줉??李얠쓣 ???놁뒿?덈떎.');
+        setError('?대떦 ID??湲곕줉??李얠쓣 ???놁뒿?덈떎.');
       }
       setIsFetching(false);
     } else if (location.state?.selectedDate) {
@@ -145,7 +116,7 @@ const LogForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    stopRecognition();
+    stopRecognition(); // Stop listening before saving
     setIsLoading(true);
     let allLogs = getLogsFromStorage();
     if (isEditing) {
@@ -156,7 +127,7 @@ const LogForm = () => {
     }
     saveLogsToStorage(allLogs);
     setIsLoading(false);
-    toast.success(isEditing ? '기록을 수정했습니다.' : '새 기록을 생성했습니다.');
+    toast.success(isEditing ? '湲곕줉???섏젙?섏뿀?듬땲??' : '??湲곕줉???묒꽦?섏뿀?듬땲??');
     navigate('/');
   };
 
@@ -166,29 +137,29 @@ const LogForm = () => {
 
   return (
     <div>
-      <h1>{isEditing ? '기록 수정' : '새 기록 작성'}</h1>
+      <h1>{isEditing ? '湲곕줉 ?섏젙' : '??湲곕줉 ?묒꽦'}</h1>
       <hr />
       <Form onSubmit={handleSubmit}>
         <Form.Group className="mb-3" controlId="formLogDate">
-          <Form.Label>기록 날짜</Form.Label>
+          <Form.Label>湲곕줉 ?좎쭨</Form.Label>
           <Form.Control type="date" value={logDate} onChange={(e) => setLogDate(e.target.value)} required />
         </Form.Group>
 
         <Form.Group className="mb-3" controlId="formContent">
           <div className="d-flex justify-content-between align-items-center">
-            <Form.Label>기록 내용</Form.Label>
+            <Form.Label>湲곕줉 ?댁슜</Form.Label>
             <Button variant={isListening ? 'danger' : 'outline-primary'} size="sm" onClick={isListening ? stopRecognition : startRecognition}>
-              {isListening ? '음성 인식 중지' : '음성으로 입력'}
+              {isListening ? '?뵶 ?몄떇 以묒?' : '?렎 ?뚯꽦?쇰줈 ?낅젰'}
             </Button>
           </div>
-          <Form.Control as="textarea" rows={10} placeholder="음성으로 입력 버튼을 누르거나, 직접 입력하세요" value={content} onChange={(e) => setContent(e.target.value)} required />
+          <Form.Control as="textarea" rows={10} placeholder="?뚯꽦?쇰줈 ?낅젰 踰꾪듉???꾨Ⅴ怨?留먯??섏떆嫄곕굹, 吏곸젒 ?낅젰?섏꽭??" value={content} onChange={(e) => setContent(e.target.value)} required />
         </Form.Group>
 
         {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
 
         <div className="d-grid gap-2 d-md-flex justify-content-md-end">
-          <Button variant="secondary" onClick={() => navigate(-1)} disabled={isLoading}>취소</Button>
-          <Button variant="primary" type="submit" disabled={isLoading}>{isLoading ? <Spinner as="span" size="sm" /> : (isEditing ? '수정 완료' : '작성 완료')}</Button>
+          <Button variant="secondary" onClick={() => navigate(-1)} disabled={isLoading}>痍⑥냼</Button>
+          <Button variant="primary" type="submit" disabled={isLoading}>{isLoading ? <Spinner as="span" size="sm" /> : (isEditing ? '?섏젙 ?꾨즺' : '?묒꽦 ?꾨즺')}</Button>
         </div>
       </Form>
     </div>
@@ -196,4 +167,3 @@ const LogForm = () => {
 };
 
 export default LogForm;
-

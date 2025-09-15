@@ -1,172 +1,118 @@
+/* Serene Dusk Theme */
+
 body {
-  /* Subtle gradient background for a soft feel */
-  background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
-  font-family: 'Arial', sans-serif; /* Default font, can be changed later */
-  color: #4A4A4A; /* Dark gray for text */
+  background-color: #F8F9FA; /* Soft gray background */
+  font-family: '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif';
+  color: #333333; /* Dark charcoal for text */
+}
+
+/* Main content container */
+.container {
+  background-color: #FFFFFF;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1) !important;
+  padding: 30px !important;
 }
 
 /* General styling for rounded corners and shadows */
-.card, .list-group-item, .form-control, .btn, .react-calendar,
-.react-calendar__tile, .keyword-tag {
-  border-radius: 15px !important; /* More rounded corners */
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Soft shadow */
-  border: none !important; /* Remove default borders */
+.card, .list-group-item, .form-control, .btn, .react-calendar {
+  border-radius: 12px !important;
+  box-shadow: none !important; /* Remove individual shadows for a cleaner look */
+  border: 1px solid #E9ECEF !important; /* Subtle borders */
 }
 
-/* Override Bootstrap default button shadows for consistency */
-.btn {
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+.form-control:focus {
+  border-color: #4A90E2 !important; /* Twilight Blue focus */
+  box-shadow: 0 0 0 0.25rem rgba(74, 144, 226, 0.25) !important;
 }
 
-.btn:hover {
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
-}
-
-/* Custom color palette for Bootstrap components */
+/* --- Button Palette --- */
 .btn-primary {
-  background-color: #FFD1DC !important; /* Light Pink */
-  border-color: #FFD1DC !important;
-  color: #4A4A4A !important; /* Dark text on light button */
+  background-color: #4A90E2 !important; /* Twilight Blue */
+  border-color: #4A90E2 !important;
+  color: #FFFFFF !important;
 }
 
 .btn-primary:hover {
-  background-color: #FFB6C1 !important; /* Slightly darker pink on hover */
-  border-color: #FFB6C1 !important;
+  background-color: #357ABD !important; /* Darker blue on hover */
+  border-color: #357ABD !important;
 }
 
 .btn-secondary {
-  background-color: #B0E0E6 !important; /* Powder Blue */
-  border-color: #B0E0E6 !important;
-  color: #4A4A4A !important;
+  background-color: #E9ECEF !important; /* Light gray */
+  border-color: #E9ECEF !important;
+  color: #333333 !important;
 }
 
 .btn-secondary:hover {
-  background-color: #ADD8E6 !important; /* Slightly darker blue on hover */
-  border-color: #ADD8E6 !important;
+  background-color: #DEE2E6 !important;
+  border-color: #DEE2E6 !important;
 }
 
-.btn-outline-secondary {
-  color: #B0E0E6 !important;
-  border-color: #B0E0E6 !important;
+.btn-danger {
+    background-color: #D0021B !important;
+    border-color: #D0021B !important;
 }
 
-.btn-outline-secondary:hover {
-  background-color: #B0E0E6 !important;
-  color: #4A4A4A !important;
-}
-
-.btn-outline-danger {
-  color: #FF6347 !important; /* Tomato */
-  border-color: #FF6347 !important;
-}
-
-.btn-outline-danger:hover {
-  background-color: #FF6347 !important;
-  color: white !important;
-}
-
-/* Style for react-calendar days with logs */
-.react-calendar__tile.has-log {
-  background-color: #FFECB3; /* Light Yellow */
-  border-radius: 15px !important;
-}
-
-.react-calendar__tile.has-log:hover {
-  background-color: #FFD700; /* Gold */
-}
-
-/* Custom styles for the calendar size */
+/* --- Calendar Styles --- */
 .voice-calendar {
-  width: 800px !important; /* Fixed width as requested, forced */
-  max-width: 100%; /* Ensure it's responsive on smaller screens */
-  height: 650px; /* Increased height for more space */
-  border: none !important; /* Remove default border */
-  box-shadow: 0 8px 16px rgba(0,0,0,0.15) !important; /* Stronger shadow for calendar */
+  width: 100% !important;
+  border: none !important;
 }
 
-/* Adjust tile size within the calendar */
-.voice-calendar .react-calendar__tile {
-  height: 80px; /* Increased height of individual day tiles */
+.react-calendar__tile {
+  height: 80px;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* Align content to top */
+  justify-content: flex-start;
   align-items: center;
-  font-size: 1.1em;
-  padding-top: 5px; /* Space below day number */
+  padding-top: 5px;
+  border-radius: 8px !important;
 }
 
-/* Adjust navigation buttons for better appearance */
-.voice-calendar .react-calendar__navigation button {
-  min-width: 44px; /* Ensure buttons are clickable */
-  background: none; /* Remove default button background */
-  border: none; /* Remove default button border */
-  font-size: 1.2em;
+/* Default day with logs */
+.react-calendar__tile.has-log {
+  background-color: #F8F9FA; /* Very light gray */
 }
 
-.voice-calendar .react-calendar__navigation button:enabled:hover,
-.voice-calendar .react-calendar__navigation button:enabled:focus {
-  background-color: #e6e6e6; /* Light hover effect */
-}
-
-/* Adjust month/year view headers */
-.voice-calendar .react-calendar__viewContainer {
-  font-size: 1.2em;
-}
-
-/* Style for calendar tiles that contain the search keyword */
-.react-calendar__tile.has-search-keyword {
-  background-color: #B0E0E6; /* Powder Blue */
-  border: 2px solid #87CEEB; /* Sky Blue border */
-}
-
-.react-calendar__tile.has-search-keyword:hover {
-  background-color: #ADD8E6; /* Slightly darker blue on hover */
-}
-
-/* Style for calendar tiles that contain any registered keyword */
+/* Day with a registered keyword */
 .react-calendar__tile.has-registered-keyword {
-  background-color: #D8BFD8; /* Thistle - light purple */
-  border: 2px solid #BA55D3; /* Medium Orchid border */
+  background-color: #E9F0FA; /* Light blue tint */
 }
 
-.react-calendar__tile.has-registered-keyword:hover {
-  background-color: #C8A2C8; /* Slightly darker purple on hover */
+/* Day with the searched keyword (priority) */
+.react-calendar__tile.has-search-keyword {
+  background-color: #FFF3E0; /* Light orange tint */
+  border: 1px solid #F5A623 !important; /* Warm orange border */
 }
 
-/* Ensure keyword tags are visible and styled */
+.react-calendar__tile--active,
+.react-calendar__tile:enabled:hover,
+.react-calendar__tile:enabled:focus {
+  background: #DCE9F7; /* Lighter blue for hover/active */
+}
+
+/* Keyword tags inside calendar days */
 .log-keywords {
-  font-size: 0.7em; /* Smaller font for keywords */
+  font-size: 0.7em;
   text-align: center;
   width: 100%;
-  margin-top: 2px; /* Space below day number */
+  margin-top: 2px;
   display: flex;
-  flex-wrap: wrap; /* Allow keywords to wrap */
+  flex-wrap: wrap;
   justify-content: center;
-  gap: 2px; /* Space between keyword tags */
+  gap: 2px;
 }
 
 .keyword-tag {
-  background-color: #FFECB3; /* Light Yellow for tags */
-  border-radius: 8px; /* More rounded */
+  background-color: #FFFFFF;
+  border: 1px solid #E9ECEF;
+  border-radius: 8px;
   padding: 1px 5px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 95%;
-  font-weight: bold;
-  color: #6B6B6B; /* Darker text for tags */
-}
-
-/* General container for pages */
-.container {
-  background-color: white;
-  border-radius: 20px !important; /* Very rounded corners for the main content area */
-  box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23); /* Stronger shadow */
-  padding: 30px !important;
-}
-
-/* Adjust form control focus */
-.form-control:focus {
-  border-color: #FFD1DC !important; /* Pink focus */
-  box-shadow: 0 0 0 0.25rem rgba(255, 209, 220, 0.25) !important;
+  font-weight: 500;
+  color: #555;
 }

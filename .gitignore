@@ -1,0 +1,36 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn.lock
+pnpm-lock.yaml
+
+# Build outputs
+build/
+dist/
+out/
+.next/
+
+# React (CRA) build
+voice-app/client/build/
+
+# Android/Gradle
+**/.gradle/
+**/build/
+voice-app/android/app/release/
+voice-app/android/local.properties
+
+# iOS (if ever added)
+ios/build/
+Pods/
+
+# Env files
+**/.env
+
+# Editor/OS
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+voice-app/android/app/src/main/assets/vosk-model/
+

@@ -1,28 +1,25 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Container } from 'react-bootstrap';
-import Header from './components/Header'; // Header component re-enabled
-import MainPage from './pages/MainPage'; // Renamed from PostListPage
-import LogDetailPage from './pages/LogDetailPage'; // Renamed from PostDetailPage
-import LogForm from './pages/LogForm'; // Renamed from PostForm
-// import SnakeGamePage from './pages/SnakeGamePage'; // Game page removed
-// import PixelShooterPage from './pages/PixelShooterPage'; // Game page removed
+import { Toaster } from 'react-hot-toast'; // Import Toaster
+import Header from './components/Header';
+import MainPage from './pages/MainPage';
+import LogDetailPage from './pages/LogDetailPage';
+import LogForm from './pages/LogForm';
 import './index.css';
 
 function App() {
   return (
     <Router>
+      <Toaster position="top-right" /> {/* Add Toaster component here */}
       <Header />
-      <main>
+      <main style={{ paddingTop: '80px' }}> {/* Add padding to main to avoid overlap with fixed Header */}
         <Container className="mt-4">
           <Routes>
             <Route path="/" element={<MainPage />} />
             <Route path="/logs/:id" element={<LogDetailPage />} />
             <Route path="/new-log" element={<LogForm />} />
             <Route path="/edit-log/:id" element={<LogForm />} />
-            {/* Game routes removed */}
-            {/* <Route path="/snake-game" element={<SnakeGamePage />} /> */}
-            {/* <Route path="/pixel-shooter" element={<PixelShooterPage />} /> */}
           </Routes>
         </Container>
       </main>

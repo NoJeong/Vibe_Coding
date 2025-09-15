@@ -1,0 +1,5 @@
+{
+  "appId": "com.example.voicelog",
+  "appName": "VoiceLogApp",
+  "webDir": "client/build"
+}

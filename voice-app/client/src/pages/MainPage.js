@@ -1,266 +1,256 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Button, Spinner, Alert, ListGroup, Form, Row, Col } from 'react-bootstrap';
-// import { LinkContainer } from 'react-router-bootstrap'; // Removed LinkContainer
-import { Link } from 'react-router-dom'; // Import Link from react-router-dom
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { Button, Spinner, Alert, ListGroup, Form, Row, Col, Modal, Badge } from 'react-bootstrap';
+import { Link, useNavigate } from 'react-router-dom';
 import Calendar from 'react-calendar';
 import moment from 'moment';
-import 'react-calendar/dist/Calendar.css'; // react-calendar 기본 CSS
+import toast from 'react-hot-toast';
+import 'react-calendar/dist/Calendar.css';
+import { allMockLogs as initialLogs } from '../mockData.js';
 
-import { allMockLogs } from '../mockData.js'; // Import all mock logs
+const getLogsFromStorage = () => {
+  const logsJSON = localStorage.getItem('voiceLogs');
+  if (logsJSON) return JSON.parse(logsJSON);
+  localStorage.setItem('voiceLogs', JSON.stringify(initialLogs));
+  return initialLogs;
+};
 
-// --- Registered Keywords (Hardcoded for now) --- //
-const REGISTERED_KEYWORDS = ['공부', '운동', 'React', '알고리즘', '헬스장'];
+// Custom hook for debouncing
+const useDebounce = (value, delay) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+  return debouncedValue;
+};
 
 const MainPage = () => {
+  const [allLogs, setAllLogs] = useState(getLogsFromStorage);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [logsForSelectedDate, setLogsForSelectedDate] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [calendarValue, setCalendarValue] = useState(new Date());
-  const [searchKeyword, setSearchKeyword] = useState(''); // Renamed from keyword
-
-  const [registeredKeywords, setRegisteredKeywords] = useState(['공부', '운동', 'React', '알고리즘', '헬스장']); // Dynamic registered keywords
+  const [searchInput, setSearchInput] = useState('');
+  const debouncedSearchKeyword = useDebounce(searchInput, 500); // 500ms delay
+  const [registeredKeywords, setRegisteredKeywords] = useState(['공부', '운동', 'React', '알고리즘', '헬스장']);
   const [newKeyword, setNewKeyword] = useState('');
+  const navigate = useNavigate();
 
-  // Simulate fetching all logs for calendar highlighting
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [logToDelete, setLogToDelete] = useState(null);
+  const [showDayModal, setShowDayModal] = useState(false);
+  const [modalData, setModalData] = useState({ date: null, logs: [], keywords: [] });
+
+  useEffect(() => {
+    localStorage.setItem('voiceLogs', JSON.stringify(allLogs));
+  }, [allLogs]);
+
   const allLogsMap = useMemo(() => {
     const map = new Map();
-    allMockLogs.forEach(log => {
+    allLogs.forEach(log => {
       const date = moment(log.created_at).format('YYYY-MM-DD');
-      if (!map.has(date)) {
-        map.set(date, []);
-      }
+      if (!map.has(date)) map.set(date, []);
       map.get(date).push(log);
     });
     return map;
-  }, []);
+  }, [allLogs]);
 
-  useEffect(() => {
-    // Simulate loading logs for the selected date
-    setLoading(true);
-    setError(null);
-    const timer = setTimeout(() => {
-      try {
-        const dateKey = moment(selectedDate).format('YYYY-MM-DD');
-        let logs = allLogsMap.get(dateKey) || [];
-        
-        // Filter logs by searchKeyword if present
-        if (searchKeyword) {
-          const lowerCaseSearchKeyword = searchKeyword.toLowerCase();
-          logs = logs.filter(log => 
-            log.title.toLowerCase().includes(lowerCaseSearchKeyword) || 
-            log.content.toLowerCase().includes(lowerCaseSearchKeyword)
-          );
-        }
+  const logsForSelectedDate = useMemo(() => {
+    const dateKey = moment(selectedDate).format('YYYY-MM-DD');
+    return allLogsMap.get(dateKey) || [];
+  }, [selectedDate, allLogsMap]);
 
-        setLogsForSelectedDate(logs);
-        setLoading(false);
-      } catch (e) {
-        setError('기록을 불러오는 중 오류가 발생했습니다.');
-        setLoading(false);
-      }
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [selectedDate, allLogsMap, searchKeyword]);
-
-  const handleDateChange = (date) => {
+  const handleDayClick = (date) => {
     setSelectedDate(date);
     setCalendarValue(date);
+    const dateKey = moment(date).format('YYYY-MM-DD');
+    const logsForDay = allLogsMap.get(dateKey) || [];
+    if (logsForDay.length > 0) {
+      const foundKeywords = Array.from(new Set(registeredKeywords.filter(regKeyword => 
+        logsForDay.some(log => log.content.toLowerCase().includes(regKeyword.toLowerCase()))
+      )));
+      setModalData({ date, logs: logsForDay, keywords: foundKeywords });
+      setShowDayModal(true);
+    }
+  };
+
+  const handleAddLogForDate = (date) => {
+    navigate({ pathname: '/new-log', search: '?voice=true' }, { state: { selectedDate: date.toISOString() } });
   };
 
   const handleAddKeyword = () => {
+    if (registeredKeywords.length >= 5) {
+      toast.error('키워드는 최대 5개까지 등록할 수 있습니다.');
+      return;
+    }
     if (newKeyword.trim() && !registeredKeywords.includes(newKeyword.trim())) {
-      setRegisteredKeywords([...registeredKeywords, newKeyword.trim()]);
+      const trimmedKeyword = newKeyword.trim();
+      setRegisteredKeywords([...registeredKeywords, trimmedKeyword]);
       setNewKeyword('');
+      toast.success(`'${trimmedKeyword}' 키워드가 추가되었습니다.`);
+    } else if (newKeyword.trim()) {
+      toast.error('이미 등록된 키워드입니다.');
     }
   };
 
   const handleDeleteRegisteredKeyword = (keywordToDelete) => {
     setRegisteredKeywords(registeredKeywords.filter(kw => kw !== keywordToDelete));
+    toast.success(`'${keywordToDelete}' 키워드가 삭제되었습니다.`);
   };
 
-  const tileClassName = ({ date, view }) => {
-    if (view === 'month') {
-      const dateKey = moment(date).format('YYYY-MM-DD');
-      const logsForDay = allLogsMap.get(dateKey) || [];
-      let classes = [];
+  const openDeleteModal = (logId) => {
+    setLogToDelete(logId);
+    setShowDeleteModal(true);
+  };
 
-      if (logsForDay.length > 0) {
-        classes.push('has-log');
+  const confirmDelete = () => {
+    setAllLogs(allLogs.filter(log => log.id !== logToDelete));
+    setShowDeleteModal(false);
+    setLogToDelete(null);
+    toast.success('기록이 삭제되었습니다.');
+  };
+
+  const tileClassName = useCallback(({ date, view }) => {
+    if (view !== 'month') return null;
+    const dateKey = moment(date).format('YYYY-MM-DD');
+    const logsForDay = allLogsMap.get(dateKey) || [];
+    if (logsForDay.length === 0) return null;
+
+    const classes = ['has-log'];
+    const hasKeyword = (logs, keywords) => keywords.some(regKeyword => {
+      const lowerCaseRegKeyword = regKeyword.toLowerCase();
+      return logs.some(log => log.content && log.content.toLowerCase().includes(lowerCaseRegKeyword));
+    });
+
+    if (debouncedSearchKeyword && hasKeyword(logsForDay, [debouncedSearchKeyword])) {
+      classes.push('has-search-keyword');
+    } else if (hasKeyword(logsForDay, registeredKeywords)) {
+      classes.push('has-registered-keyword');
+    }
+    return classes.join(' ');
+  }, [allLogsMap, debouncedSearchKeyword, registeredKeywords]);
+
+  const tileContent = useCallback(({ date, view }) => {
+    if (view !== 'month') return null;
+    const dateKey = moment(date).format('YYYY-MM-DD');
+    const logsForDay = allLogsMap.get(dateKey) || [];
+    if (logsForDay.length === 0) return null;
+
+    let displayKeywords = new Set();
+    const lowerCaseSearchKeyword = debouncedSearchKeyword?.toLowerCase();
+
+    if (debouncedSearchKeyword && logsForDay.some(log => log.content.toLowerCase().includes(lowerCaseSearchKeyword))) {
+      displayKeywords.add(debouncedSearchKeyword);
+    }
+
+    registeredKeywords.forEach(regKeyword => {
+      if (logsForDay.some(log => log.content.toLowerCase().includes(regKeyword.toLowerCase()))) {
+        displayKeywords.add(regKeyword);
       }
+    });
 
-      // Check if any log for the day contains the searchKeyword
-      if (searchKeyword) {
-        const lowerCaseSearchKeyword = searchKeyword.toLowerCase();
-        const hasSearchKeyword = logsForDay.some(log => 
-          log.title.toLowerCase().includes(lowerCaseSearchKeyword) || 
-          log.content.toLowerCase().includes(lowerCaseSearchKeyword)
-        );
-        if (hasSearchKeyword) {
-          classes.push('has-search-keyword');
-        }
-      }
-
-      // Check if any log for the day contains any of the registered keywords
-      const hasRegisteredKeyword = registeredKeywords.some(regKeyword => {
-        const lowerCaseRegKeyword = regKeyword.toLowerCase();
-        return logsForDay.some(log => 
-          log.title.toLowerCase().includes(lowerCaseRegKeyword) || 
-          log.content.toLowerCase().includes(lowerCaseRegKeyword)
-        );
-      });
-      if (hasRegisteredKeyword) {
-        classes.push('has-registered-keyword');
-      }
-
-      return classes.length > 0 ? classes : null;
+    const keywordsArray = Array.from(displayKeywords);
+    if (keywordsArray.length > 0) {
+      return (
+        <div className="log-keywords">
+          {keywordsArray.slice(0, 2).map((kw, index) => <div key={index} className="keyword-tag">{kw}</div>)}
+          {keywordsArray.length > 2 && <div className="keyword-tag">...</div>}
+        </div>
+      );
     }
     return null;
-  };
-
-  const tileContent = ({ date, view }) => {
-    if (view === 'month') {
-      const dateKey = moment(date).format('YYYY-MM-DD');
-      const logsForDay = allLogsMap.get(dateKey) || [];
-
-      if (logsForDay.length > 0) {
-        const foundKeywords = new Set();
-        registeredKeywords.forEach(regKeyword => {
-          const lowerCaseRegKeyword = regKeyword.toLowerCase();
-          const isPresent = logsForDay.some(log => 
-            log.title.toLowerCase().includes(lowerCaseRegKeyword) || 
-            log.content.toLowerCase().includes(lowerCaseRegKeyword)
-          );
-          if (isPresent) {
-            foundKeywords.add(regKeyword);
-          }
-        });
-
-        const keywordsArray = Array.from(foundKeywords);
-        if (keywordsArray.length > 0) {
-          return (
-            <div className="log-keywords">
-              {keywordsArray.map((kw, index) => (
-                <div key={index} className="keyword-tag">{kw}</div>
-              ))}
-            </div>
-          );
-        }
-      }
-    }
-    return null;
-  };
-
-  // Placeholder for Voice Input functionality
-  const handleVoiceInputStart = () => {
-    alert('음성 기록 시작 (기능 구현 예정)');
-    // Actual Web Speech API integration will go here
-  };
-
-  const handleVoiceInputStop = () => {
-    alert('음성 기록 중지 (기능 구현 예정)');
-  };
+  }, [allLogsMap, registeredKeywords, debouncedSearchKeyword]);
 
   return (
     <div>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1>나의 기록 캘린더</h1>
-        <Button variant="primary" onClick={handleVoiceInputStart}>음성 기록 시작</Button>
-      </div>
-
       <Form.Group className="mb-3" controlId="searchKeywordInput">
         <Form.Label>키워드 검색</Form.Label>
-        <Form.Control
-          type="text"
-          placeholder="캘린더에서 찾을 키워드를 입력하세요 (예: 공부, 운동)"
-          value={searchKeyword}
-          onChange={(e) => setSearchKeyword(e.target.value)}
-        />
+        <Form.Control type="text" placeholder="캘린더에서 찾을 키워드를 입력하세요..." value={searchInput} onChange={(e) => setSearchInput(e.target.value)} />
       </Form.Group>
 
+      <div className="d-flex justify-content-center mb-4">
+        <Calendar onClickDay={handleDayClick} value={calendarValue} locale="ko-KR" tileClassName={tileClassName} tileContent={tileContent} formatDay={(locale, date) => moment(date).format('D')} className="voice-calendar" />
+      </div>
+
       <Form.Group className="mb-3" controlId="newKeywordInput">
-        <Form.Label>등록할 키워드</Form.Label>
+        <Form.Label>등록할 키워드 (최대 5개)</Form.Label>
         <div className="d-flex">
-          <Form.Control
-            type="text"
-            placeholder="새 키워드를 입력하세요 (예: 독서)"
-            value={newKeyword}
-            onChange={(e) => setNewKeyword(e.target.value)}
-            onKeyPress={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddKeyword(); } }}
-          />
-          <Button variant="outline-secondary" onClick={handleAddKeyword} className="ms-2">추가</Button>
+          <Form.Control type="text" placeholder="새 키워드를 입력하세요 (예: 독서)" value={newKeyword} onChange={(e) => setNewKeyword(e.target.value)} onKeyPress={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddKeyword(); } }} disabled={registeredKeywords.length >= 5} />
+          <Button variant="outline-secondary" onClick={handleAddKeyword} className="ms-2" disabled={registeredKeywords.length >= 5}>추가</Button>
         </div>
       </Form.Group>
 
       <div className="mb-4">
         <Form.Label>등록된 키워드</Form.Label>
         <Row xs={1} sm={2} md={3} lg={4} xl={5} className="g-2">
-          {registeredKeywords.length > 0 ? (
-            registeredKeywords.map((kw, index) => (
-              <Col key={index}>
-                <div className="d-flex align-items-center justify-content-between p-2 border rounded bg-light">
-                  <span>{kw}</span>
-                  <Button variant="light" size="sm" onClick={() => handleDeleteRegisteredKeyword(kw)}>
-                    &times;
-                  </Button>
-                </div>
-              </Col>
-            ))
-          ) : (
-            <Col><div className="p-2 text-muted">등록된 키워드가 없습니다.</div></Col>
-          )}
+          {registeredKeywords.map((kw, index) => (
+            <Col key={index}>
+              <div className="d-flex align-items-center justify-content-between p-2 border rounded bg-light"><span>{kw}</span><Button variant="light" size="sm" onClick={() => handleDeleteRegisteredKeyword(kw)}>&times;</Button></div>
+            </Col>
+          ))}
         </Row>
-      </div>
-
-      <div className="d-flex justify-content-center mb-4">
-        <Calendar
-          onChange={handleDateChange}
-          value={calendarValue}
-          locale="ko-KR"
-          tileClassName={tileClassName}
-          formatDay={(locale, date) => date.getDate()} // Only show day number
-          className="voice-calendar" // Custom class for sizing
-          tileContent={tileContent} // Render custom content inside tiles
-        />
       </div>
 
       <hr />
 
-      <h2>{moment(selectedDate).format('YYYY년 MM월 DD일')} 기록</h2>
-      {loading ? (
-        <div className="text-center">
-          <Spinner animation="border" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </Spinner>
-        </div>
-      ) : error ? (
-        <Alert variant="danger">
-          <Alert.Heading>오류 발생!</Alert.Heading>
-          <p>{error}</p>
-        </Alert>
-      ) : (
-        <>
-          <ListGroup>
-            {logsForSelectedDate.length > 0 ? (
-              logsForSelectedDate.map(log => (
-                <ListGroup.Item action as={Link} to={`/logs/${log.id}`} key={log.id}> 
-                  <div className="d-flex justify-content-between align-items-start">
-                    <div className="ms-2 me-auto">
-                      <div className="fw-bold">{log.title}</div>
-                      <small>{log.content.substring(0, 50)}...</small>
-                    </div>
-                    <small>{new Date(log.created_at).toLocaleTimeString()}</small>
-                  </div>
-                </ListGroup.Item>
-              ))
-            ) : (
-              <ListGroup.Item>선택된 날짜에 기록이 없습니다.</ListGroup.Item>
-            )}
-          </ListGroup>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h2>{moment(selectedDate).format('YYYY년 MM월 DD일')} 기록</h2>
+        <Button variant="secondary" onClick={() => handleAddLogForDate(selectedDate)}>이 날짜에 기록 추가</Button>
+      </div>
 
-          {/* Removed pagination as it's not needed for calendar view */}
-        </>
-      )}
+      <ListGroup>
+        {logsForSelectedDate.length > 0 ? (
+          logsForSelectedDate.map(log => (
+            <ListGroup.Item key={log.id} className="d-flex justify-content-between align-items-start">
+              <div className="ms-2 me-auto" style={{ width: '100%' }}>
+                <Link to={`/logs/${log.id}`} className="text-decoration-none text-dark"><p style={{ whiteSpace: 'pre-wrap', marginBottom: '0.5rem' }}>{log.content.substring(0, 150)}...</p></Link>
+                <div className="d-flex justify-content-end align-items-center w-100">
+                  <small className="text-muted me-auto">{new Date(log.created_at).toLocaleString()}</small>
+                  <Button variant="link" size="sm" className="p-0 ms-2" onClick={() => navigate(`/edit-log/${log.id}`)}>✏️</Button>
+                  <Button variant="link" size="sm" className="p-0 ms-1 text-danger" onClick={() => openDeleteModal(log.id)}>❌</Button>
+                </div>
+              </div>
+            </ListGroup.Item>
+          ))
+        ) : (
+          <ListGroup.Item>선택된 날짜에 기록이 없습니다.</ListGroup.Item>
+        )}
+      </ListGroup>
+
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
+        <Modal.Header closeButton><Modal.Title>기록 삭제 확인</Modal.Title></Modal.Header>
+        <Modal.Body>정말로 이 기록을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>취소</Button>
+          <Button variant="danger" onClick={confirmDelete}>삭제</Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={showDayModal} onHide={() => setShowDayModal(false)} centered size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>{modalData.date ? moment(modalData.date).format('YYYY년 MM월 DD일') : ''} 상세 정보</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <h5><Badge bg="info">발견된 키워드</Badge></h5>
+          <div className="mb-3">
+            {modalData.keywords.length > 0 ? modalData.keywords.map((kw, i) => <Badge key={i} pill bg="primary" className="me-1">{kw}</Badge>) : <p className="text-muted">이 날짜에는 등록된 키워드가 포함된 기록이 없습니다.</p>}
+          </div>
+          <hr />
+          <h5><Badge bg="info">기록 목록</Badge></h5>
+          <ListGroup variant="flush">
+            {modalData.logs.map(log => (
+              <ListGroup.Item key={log.id} action onClick={() => navigate(`/logs/${log.id}`)}>
+                {log.content.substring(0, 200)}...
+              </ListGroup.Item>
+            ))}
+          </ListGroup>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDayModal(false)}>닫기</Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };
