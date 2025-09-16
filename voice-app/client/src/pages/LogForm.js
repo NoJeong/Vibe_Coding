@@ -28,7 +28,7 @@ const LogForm = () => {
   const recognitionRef = useRef(null);
   const finalTranscriptRef = useRef('');
   const sttListenerRef = useRef(null);
-  const isNative = typeof window !== 'undefined' && !!window.Capacitor?.isNativePlatform?.() && window.Capacitor.isNativePlatform();
+  const isNative = typeof window !== 'undefined' && !!window.Capacitor?.getPlatform && window.Capacitor.getPlatform() !== 'web';
   const offlineStt = isNative ? window.Capacitor?.Plugins?.OfflineStt : null;
 
   const stopRecognition = () => {
@@ -196,4 +196,3 @@ const LogForm = () => {
 };
 
 export default LogForm;
-
