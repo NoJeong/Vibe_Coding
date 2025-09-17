@@ -70,6 +70,13 @@ const LogDetailPage = () => {
         <Card.Text style={{ whiteSpace: 'pre-wrap', minHeight: '200px' }}>
           {log.content}
         </Card.Text>
+        {Array.isArray(log.keywords) && log.keywords.length ? (
+          <div className="mt-2 d-flex flex-wrap gap-2">
+            {log.keywords.map((k) => (
+              <span key={k} className="badge bg-secondary">{k}</span>
+            ))}
+          </div>
+        ) : null}
       </Card.Body>
       <Card.Footer className="d-flex justify-content-between align-items-center">
         <small className="text-muted">
@@ -85,4 +92,3 @@ const LogDetailPage = () => {
 };
 
 export default LogDetailPage;
-

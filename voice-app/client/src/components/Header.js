@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Navbar, Nav, Container, Button } from 'react-bootstrap';
-import { LinkContainer } from 'react-router-bootstrap';
+import { Link } from 'react-router-dom';
 
 const Header = () => {
   const [theme, setTheme] = useState('light');
@@ -55,19 +55,15 @@ const Header = () => {
   return (
     <Navbar bg="light" expand="lg" fixed="top" className="mb-4" style={{ boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} expanded={expanded} onToggle={setExpanded}>
       <Container>
-        <LinkContainer to="/">
-          <Navbar.Brand style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', fontWeight: '800', letterSpacing: '0.5px', color: 'var(--text)' }}>
-            했음
-          </Navbar.Brand>
-        </LinkContainer>
+        <Navbar.Brand as={Link} to="/" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', fontWeight: '800', letterSpacing: '0.5px', color: 'var(--text)' }}>
+          했음
+        </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav" ref={collapseRef}>
           <Nav className="ms-auto align-items-center">
             {/* Pass `to` as an object to separate pathname and search */}
-            <LinkContainer to={{ pathname: "/new-log", search: "?voice=true" }}>
-              <Button className="btn-accent ms-2" onClick={() => setExpanded(false)}>음성 기록</Button>
-            </LinkContainer>
-            <Button className="btn-ghost ms-2" onClick={toggleTheme} title="테마 전환">
+            <Button as={Link} to={{ pathname: "/new-log", search: "?voice=true" }} className="btn-accent ms-2" onClick={() => setExpanded(false)}>음성 기록</Button>
+            <Button className="btn-ghost ms-2" onClick={toggleTheme} title="테마 변환">
               테마: {theme}
             </Button>
           </Nav>
@@ -78,3 +74,4 @@ const Header = () => {
 };
 
 export default Header;
+

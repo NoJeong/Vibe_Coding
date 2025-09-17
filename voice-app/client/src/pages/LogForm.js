@@ -13,6 +13,23 @@ const saveLogsToStorage = (logs) => {
   localStorage.setItem('voiceLogs', JSON.stringify(logs));
 };
 
+const SAVED_KEYWORDS_KEY = 'savedKeywords';
+const getSavedKeywords = () => {
+  try {
+    const raw = localStorage.getItem(SAVED_KEYWORDS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+  } catch (_) {
+    return [];
+  }
+};
+const saveSavedKeywords = (keywords) => {
+  try {
+    const unique = Array.from(new Set((keywords || []).filter(Boolean)));
+    localStorage.setItem(SAVED_KEYWORDS_KEY, JSON.stringify(unique));
+  } catch (_) {}
+};
+
 const LogForm = () => {
   const [content, setContent] = useState('');
   const [logDate, setLogDate] = useState(moment().format('YYYY-MM-DD'));
@@ -20,6 +37,8 @@ const LogForm = () => {
   const [isFetching, setIsFetching] = useState(false);
   const [error, setError] = useState(null);
   const [isListening, setIsListening] = useState(false);
+  const [keywords, setKeywords] = useState([]);
+  const [keywordInput, setKeywordInput] = useState('');
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -55,10 +74,10 @@ const LogForm = () => {
     if (offlineStt) {
       try {
         finalTranscriptRef.current = content;
-        sttListenerRef.current = await offlineStt.addListener('sttResult', ({ text, isFinal }) => {
+                sttListenerRef.current = await offlineStt.addListener('sttResult', ({ text, isFinal }) => {
           if (typeof text !== 'string') return;
           if (isFinal) {
-            finalTranscriptRef.current += text;
+            finalTranscriptRef.current += text + ' ';
             setContent(finalTranscriptRef.current);
           } else {
             setContent(finalTranscriptRef.current + text);
@@ -115,14 +134,7 @@ const LogForm = () => {
     recognition.start();
   };
 
-  useEffect(() => {
-    const queryParams = new URLSearchParams(location.search);
-    const startVoice = queryParams.get('voice') === 'true';
-    if (startVoice && !isEditing) {
-      startRecognition();
-    }
-    return () => stopRecognition();
-  }, []);
+  
 
   useEffect(() => {
     if (isEditing) {
@@ -133,6 +145,7 @@ const LogForm = () => {
       if (foundLog) {
         setContent(foundLog.content);
         setLogDate(moment(foundLog.created_at).format('YYYY-MM-DD'));
+        setKeywords(Array.isArray(foundLog.keywords) ? foundLog.keywords : []);
       } else {
         toast.error('해당 기록을 찾을 수 없습니다.');
         setError('해당 ID의 기록을 찾을 수 없습니다.');
@@ -150,11 +163,16 @@ const LogForm = () => {
     let allLogs = getLogsFromStorage();
     if (isEditing) {
       const logId = parseInt(id, 10);
-      allLogs = allLogs.map(log => log.id === logId ? { ...log, content, created_at: moment(logDate).toISOString() } : log);
+      allLogs = allLogs.map(log => log.id === logId ? { ...log, content, keywords, created_at: moment(logDate).toISOString() } : log);
     } else {
-      allLogs = [{ id: Date.now(), content, created_at: moment(logDate).toISOString() }, ...allLogs];
+      allLogs = [{ id: Date.now(), content, keywords, created_at: moment(logDate).toISOString() }, ...allLogs];
     }
     saveLogsToStorage(allLogs);
+    // Merge keywords into saved keywords store
+    if (keywords && keywords.length) {
+      const existing = getSavedKeywords();
+      saveSavedKeywords([...existing, ...keywords]);
+    }
     setIsLoading(false);
     toast.success(isEditing ? '기록을 수정했습니다.' : '새 기록을 생성했습니다.');
     navigate('/');
@@ -182,6 +200,48 @@ const LogForm = () => {
             </Button>
           </div>
           <Form.Control as="textarea" rows={10} placeholder="음성으로 입력 버튼을 누르거나, 직접 입력하세요" value={content} onChange={(e) => setContent(e.target.value)} required />
+        </Form.Group>
+
+        <Form.Group className="mb-3" controlId="formKeywords">
+          <Form.Label>키워드</Form.Label>
+          <div className="d-flex gap-2 mb-2">
+            <Form.Control
+              type="text"
+              placeholder="쉼표 또는 Enter로 추가 (예: 운동, 회의)"
+              value={keywordInput}
+              onChange={(e) => setKeywordInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ',') {
+                  e.preventDefault();
+                  const k = keywordInput.trim();
+                  if (k && !keywords.includes(k)) setKeywords((prev) => [...prev, k]);
+                  setKeywordInput('');
+                }
+              }}
+            />
+            <Button
+              variant="outline-secondary"
+              onClick={(e) => {
+                e.preventDefault();
+                const k = keywordInput.trim();
+                if (k && !keywords.includes(k)) setKeywords((prev) => [...prev, k]);
+                setKeywordInput('');
+              }}
+            >추가</Button>
+          </div>
+          <div className="d-flex flex-wrap gap-2">
+            {keywords.map((k) => (
+              <span
+                key={k}
+                className="badge bg-secondary"
+                style={{ cursor: 'pointer' }}
+                onClick={() => setKeywords((prev) => prev.filter((x) => x !== k))}
+                title="클릭하여 제거"
+              >
+                {k} ×
+              </span>
+            ))}
+          </div>
         </Form.Group>
 
         {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
