@@ -346,13 +346,8 @@ const MainPage = () => {
                   );
                 }}
               />
-              <div className="mt-3 small text-muted d-flex justify-content-between align-items-center">
-                <span>선택한 날짜: {moment(selectedDate).format('YYYY년 M월 D일 (ddd)')}</span>
-                {restrictToDate ? (
-                  <Button variant="link" size="sm" onClick={() => setRestrictToDate(false)}>전체 보기</Button>
-                ) : (
-                  <Button variant="link" size="sm" onClick={() => setRestrictToDate(true)}>해당 날짜만</Button>
-                )}
+              <div className="mt-3 small text-muted">
+                선택한 날짜: {moment(selectedDate).format('YYYY년 M월 D일 (ddd)')}
               </div>
             </Card.Body>
           </Card>
@@ -370,6 +365,15 @@ const MainPage = () => {
                 </Card.Subtitle>
               </div>
               <div className="d-flex gap-2">
+                {restrictToDate ? (
+                  <Button variant="outline-secondary" size="sm" onClick={() => setRestrictToDate(false)}>
+                    전체 보기
+                  </Button>
+                ) : (
+                  <Button variant="outline-secondary" size="sm" onClick={() => setRestrictToDate(true)}>
+                    해당 날짜만
+                  </Button>
+                )}
                 <Button variant="outline-secondary" size="sm" onClick={handleRefresh}>새로고침</Button>
                 <Button as={Link} to="/new-log" variant="primary" size="sm">새 기록 작성</Button>
               </div>
