@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Navbar, Nav, Container, Button } from 'react-bootstrap';
+import { Navbar, Nav, Container } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 
 const Header = () => {
@@ -54,20 +54,20 @@ const Header = () => {
     <Navbar bg="light" expand="lg" fixed="top" className="mb-4" style={{ boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} expanded={expanded} onToggle={setExpanded}>
       <Container>
         <Navbar.Brand as={Link} to="/" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', fontWeight: '800', letterSpacing: '0.5px', color: 'var(--text)' }}>
-          보이스로그
+          했음
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav" ref={collapseRef}>
           <Nav className="ms-auto align-items-center">
-            <Button as={Link} to="/records" variant="outline-secondary" className="ms-2" onClick={() => setExpanded(false)}>
+            <Nav.Link as={Link} to="/records" className="ms-3 fw-bold fs-5 text-decoration-none" onClick={() => setExpanded(false)}>
               나의 기록 보기
-            </Button>
-            <Button as={Link} to={{ pathname: "/new-log", search: "?voice=true" }} className="btn-accent ms-2" onClick={() => setExpanded(false)}>
+            </Nav.Link>
+            <Nav.Link as={Link} to={{ pathname: '/new-log', search: '?voice=true' }} className="ms-3 fw-bold fs-5 text-decoration-none" onClick={() => setExpanded(false)}>
               새 기록
-            </Button>
-            <Button className="btn-ghost ms-2" onClick={toggleTheme} title="테마 변경">
+            </Nav.Link>
+            <Nav.Link className="ms-3 text-muted" onClick={toggleTheme} role="button" title="테마 변경">
               테마: {theme}
-            </Button>
+            </Nav.Link>
           </Nav>
         </Navbar.Collapse>
       </Container>
@@ -76,4 +76,3 @@ const Header = () => {
 };
 
 export default Header;
-
