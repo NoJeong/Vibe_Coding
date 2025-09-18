@@ -4,6 +4,7 @@ import { Container } from 'react-bootstrap';
 import { Toaster } from 'react-hot-toast'; // Import Toaster
 import Header from './components/Header';
 import MainPage from './pages/MainPage';
+import RecordsPage from './pages/RecordsPage';
 import LogDetailPage from './pages/LogDetailPage';
 import LogForm from './pages/LogForm';
 import './index.css';
@@ -41,6 +42,7 @@ function App() {
         <Container className="mt-4">
           <Routes>
             <Route path="/" element={<MainPage />} />
+            <Route path="/records" element={<RecordsPage />} />
             <Route path="/logs/:id" element={<LogDetailPage />} />
             <Route path="/new-log" element={<LogForm />} />
             <Route path="/edit-log/:id" element={<LogForm />} />

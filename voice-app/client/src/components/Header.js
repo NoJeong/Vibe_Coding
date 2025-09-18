@@ -7,7 +7,6 @@ const Header = () => {
   const [expanded, setExpanded] = useState(false);
   const collapseRef = useRef(null);
 
-  // Initialize theme on mount
   useEffect(() => {
     const stored = localStorage.getItem('theme');
     let next = stored;
@@ -32,7 +31,6 @@ const Header = () => {
     document.documentElement.setAttribute('data-theme', next);
   };
 
-  // Close navbar menu when user scrolls/drag the main content or interacts outside
   useEffect(() => {
     const closeIfOpen = (e) => {
       if (!expanded) return;
@@ -56,14 +54,18 @@ const Header = () => {
     <Navbar bg="light" expand="lg" fixed="top" className="mb-4" style={{ boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} expanded={expanded} onToggle={setExpanded}>
       <Container>
         <Navbar.Brand as={Link} to="/" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', fontWeight: '800', letterSpacing: '0.5px', color: 'var(--text)' }}>
-          했음
+          보이스로그
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav" ref={collapseRef}>
           <Nav className="ms-auto align-items-center">
-            {/* Pass `to` as an object to separate pathname and search */}
-            <Button as={Link} to={{ pathname: "/new-log", search: "?voice=true" }} className="btn-accent ms-2" onClick={() => setExpanded(false)}>음성 기록</Button>
-            <Button className="btn-ghost ms-2" onClick={toggleTheme} title="테마 변환">
+            <Button as={Link} to="/records" variant="outline-secondary" className="ms-2" onClick={() => setExpanded(false)}>
+              나의 기록 보기
+            </Button>
+            <Button as={Link} to={{ pathname: "/new-log", search: "?voice=true" }} className="btn-accent ms-2" onClick={() => setExpanded(false)}>
+              새 기록
+            </Button>
+            <Button className="btn-ghost ms-2" onClick={toggleTheme} title="테마 변경">
               테마: {theme}
             </Button>
           </Nav>
