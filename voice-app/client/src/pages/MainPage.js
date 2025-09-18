@@ -68,6 +68,7 @@ const MainPage = () => {
   const [visibleCount, setVisibleCount] = useState(LOGS_PER_PAGE);
   const [savedKeywords, setSavedKeywords] = useState([]);
   const [selectedKeywords, setSelectedKeywords] = useState([]);
+  const [savedKeywordInput, setSavedKeywordInput] = useState('');
 
   useEffect(() => {
     moment.locale('ko');
@@ -248,6 +249,17 @@ const MainPage = () => {
     writeSavedKeywords(limited);
   };
 
+  const addSavedKeyword = () => {
+    const k = savedKeywordInput.trim();
+    if (!k) return;
+    if ((savedKeywords || []).includes(k)) { setSavedKeywordInput(''); return; }
+    const nextAll = [k, ...(savedKeywords || [])];
+    const limited = Array.from(new Set(nextAll)).slice(0, 5);
+    setSavedKeywords(limited);
+    writeSavedKeywords(limited);
+    setSavedKeywordInput('');
+  };
+
   return (
     <Row className="gy-4">
       <Col lg={4}>
@@ -364,9 +376,27 @@ const MainPage = () => {
             </div>
 
             <Form className="mb-3" onSubmit={(e) => e.preventDefault()}>
-              {savedKeywords && savedKeywords.length > 0 && (
-                <div className="mb-2" style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {savedKeywords.map((k) => (
+              <div className="mb-2" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                <Form.Control
+                  type="text"
+                  value={savedKeywordInput}
+                  onChange={(e) => setSavedKeywordInput(e.target.value)}
+                  placeholder="저장할 키워드 입력 (최대 5개)"
+                  style={{ maxWidth: 280 }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addSavedKeyword(); }
+                  }}
+                />
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  disabled={!savedKeywordInput.trim() || (savedKeywords?.length || 0) >= 5}
+                  onClick={addSavedKeyword}
+                >
+                  추가 ({(savedKeywords?.length || 0)}/5)
+                </Button>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {savedKeywords && savedKeywords.length > 0 && savedKeywords.map((k) => (
                     <div key={k} className="d-inline-flex align-items-center gap-1">
                       <Button
                         variant={selectedKeywords.includes(k) ? 'primary' : 'outline-secondary'}
@@ -379,7 +409,7 @@ const MainPage = () => {
                     </div>
                   ))}
                 </div>
-              )}
+              </div>
               <Form.Control
                 type="search"
                 placeholder="내용/키워드로 검색해요 (예: 점심 #운동)"
@@ -464,4 +494,3 @@ const MainPage = () => {
 };
 
 export default MainPage;
-

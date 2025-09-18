@@ -13,22 +13,7 @@ const saveLogsToStorage = (logs) => {
   localStorage.setItem('voiceLogs', JSON.stringify(logs));
 };
 
-const SAVED_KEYWORDS_KEY = 'savedKeywords';
-const getSavedKeywords = () => {
-  try {
-    const raw = localStorage.getItem(SAVED_KEYWORDS_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
-  } catch (_) {
-    return [];
-  }
-};
-const saveSavedKeywords = (keywords) => {
-  try {
-    const unique = Array.from(new Set((keywords || []).filter(Boolean)));
-    localStorage.setItem(SAVED_KEYWORDS_KEY, JSON.stringify(unique));
-  } catch (_) {}
-};
+// Note: Saved(interest) keywords are now managed on MainPage only.
 
 const LogForm = () => {
   const [content, setContent] = useState('');
@@ -168,11 +153,6 @@ const LogForm = () => {
       allLogs = [{ id: Date.now(), content, keywords, created_at: moment(logDate).toISOString() }, ...allLogs];
     }
     saveLogsToStorage(allLogs);
-    // Merge keywords into saved keywords store
-    if (keywords && keywords.length) {
-      const existing = getSavedKeywords();
-      saveSavedKeywords([...existing, ...keywords]);
-    }
     setIsLoading(false);
     toast.success(isEditing ? '기록을 수정했습니다.' : '새 기록을 생성했습니다.');
     navigate('/');
