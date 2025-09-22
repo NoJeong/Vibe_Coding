@@ -1,8 +1,8 @@
-package com.example.voicelog;
+package com.haesseum.app;
 
 import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;
-import com.example.voicelog.stt.OfflineSttPlugin;
+import com.haesseum.app.stt.OfflineSttPlugin;
 
 public class MainActivity extends BridgeActivity {
     @Override

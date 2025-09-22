@@ -1,4 +1,4 @@
-package com.example.voicelog.stt;
+package com.haesseum.app.stt;
 
 import android.Manifest;
 import android.util.Log;
