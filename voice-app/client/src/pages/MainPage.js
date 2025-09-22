@@ -1,12 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Badge, Button, Card, Col, Form, ListGroup, Row, Spinner, Stack } from 'react-bootstrap';
+import { Button, Card, Col, Form, Row, Stack } from 'react-bootstrap';
 import Calendar from 'react-calendar';
 import moment from 'moment';
 import 'moment/locale/ko';
 import 'react-calendar/dist/Calendar.css';
-
-import { LOGS_PER_PAGE } from '../mockData';
 
 const STORAGE_KEY = 'voiceLogs';
 const SAVED_KEYWORDS_KEY = 'savedKeywords';
@@ -50,141 +47,57 @@ const writeSavedKeywords = (list) => {
   } catch (_) {}
 };
 
-const highlight = (text, keyword) => {
-  if (!keyword) return text;
-  const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const regex = new RegExp(`(${escaped})`, 'gi');
-  return text.replace(regex, '<mark>$1</mark>');
-};
-
 const MainPage = () => {
-  const navigate = useNavigate();
-
   const [rawLogs, setRawLogs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
   const [selectedDate, setSelectedDate] = useState(() => new Date());
-  const [restrictToDate, setRestrictToDate] = useState(true);
-  const [visibleCount, setVisibleCount] = useState(LOGS_PER_PAGE);
   const [savedKeywords, setSavedKeywords] = useState([]);
-  const [selectedKeywords, setSelectedKeywords] = useState([]);
   const [savedKeywordInput, setSavedKeywordInput] = useState('');
 
-  useEffect(() => {
-    moment.locale('ko');
-  }, []);
+  useEffect(() => { moment.locale('ko'); }, []);
 
-  // Initial load
   useEffect(() => {
-    setLoading(true);
     const timer = window.setTimeout(() => {
       setRawLogs(getLogsFromStorage());
       setSavedKeywords(readSavedKeywords());
-      setLoading(false);
-    }, 100);
+    }, 50);
     return () => window.clearTimeout(timer);
   }, []);
 
-  // Listen storage changes (logs)
   useEffect(() => {
     const onStorage = (e) => {
-      if (e.key && e.key !== STORAGE_KEY) return;
-      setRawLogs(getLogsFromStorage());
-    };
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
-  }, []);
-
-  // Listen storage changes (saved keywords)
-  useEffect(() => {
-    const onStorage = (e) => {
-      if (e.key && e.key !== SAVED_KEYWORDS_KEY) return;
-      setSavedKeywords(readSavedKeywords());
+      if (!e.key || e.key === STORAGE_KEY) setRawLogs(getLogsFromStorage());
+      if (!e.key || e.key === SAVED_KEYWORDS_KEY) setSavedKeywords(readSavedKeywords());
     };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
   }, []);
 
   const sortedLogs = useMemo(
-    () =>
-      [...rawLogs]
-        .filter((log) => log.created_at)
-        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at)),
+    () => [...rawLogs].filter((l) => l.created_at).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)),
     [rawLogs]
   );
-
-  const selectedDateKey = useMemo(
-    () => moment(selectedDate).startOf('day').format('YYYY-MM-DD'),
-    [selectedDate]
-  );
-
-  const trimmedSearch = searchTerm.trim();
-  const normalizedSearch = trimmedSearch.toLowerCase();
-  const searchKeywordTokens = useMemo(() => {
-    const matches = trimmedSearch.match(/#([^\s#]+)/g) || [];
-    return matches.map((s) => s.slice(1).toLowerCase());
-  }, [trimmedSearch]);
-
-  const filteredLogs = useMemo(() => {
-    return sortedLogs.filter((log) => {
-      const content = (log.content || '').toString();
-      const matchesSearch = !normalizedSearch || content.toLowerCase().includes(normalizedSearch);
-      const matchesDate = !restrictToDate || moment(log.created_at).format('YYYY-MM-DD') === selectedDateKey;
-      const kw = Array.isArray(log.keywords) ? log.keywords : [];
-      const kwLower = kw.map((k) => String(k).toLowerCase());
-      const activeKeywords = searchKeywordTokens.length ? searchKeywordTokens : selectedKeywords.map((k) => k.toLowerCase());
-      const matchesKeywords = activeKeywords.length === 0 || kwLower.some((k) => activeKeywords.includes(k));
-      return matchesSearch && matchesDate && matchesKeywords;
-    });
-  }, [sortedLogs, normalizedSearch, restrictToDate, selectedDateKey, selectedKeywords, searchKeywordTokens]);
-
-  useEffect(() => {
-    setVisibleCount(LOGS_PER_PAGE);
-  }, [trimmedSearch, restrictToDate, selectedDateKey, sortedLogs.length, selectedKeywords.join('|')]);
-
-  const visibleLogs = useMemo(() => filteredLogs.slice(0, visibleCount), [filteredLogs, visibleCount]);
-  const hasMore = visibleCount < filteredLogs.length;
-
-  const uniqueSortedDays = useMemo(() => {
-    const unique = Array.from(new Set(sortedLogs.map((log) => moment(log.created_at).format('YYYY-MM-DD'))));
-    return unique.sort((a, b) => moment(b, 'YYYY-MM-DD').valueOf() - moment(a, 'YYYY-MM-DD').valueOf());
-  }, [sortedLogs]);
 
   const stats = useMemo(() => {
     const now = moment();
     const totalLogs = sortedLogs.length;
     const todayCount = sortedLogs.filter((log) => moment(log.created_at).isSame(now, 'day')).length;
     const weekCount = sortedLogs.filter((log) => moment(log.created_at).isSame(now, 'week')).length;
-
     let streak = 0;
-    if (uniqueSortedDays.length) {
+    const uniqueDays = Array.from(new Set(sortedLogs.map((log) => moment(log.created_at).format('YYYY-MM-DD'))));
+    if (uniqueDays.length) {
       streak = 1;
-      let prev = moment(uniqueSortedDays[0], 'YYYY-MM-DD');
-      for (let i = 1; i < uniqueSortedDays.length; i++) {
-        const current = moment(uniqueSortedDays[i], 'YYYY-MM-DD');
-        const diff = prev.diff(current, 'day');
+      let prev = moment(uniqueDays[0], 'YYYY-MM-DD');
+      for (let i = 1; i < uniqueDays.length; i++) {
+        const cur = moment(uniqueDays[i], 'YYYY-MM-DD');
+        const diff = prev.diff(cur, 'day');
         if (diff === 0) continue;
-        if (diff === 1) {
-          streak += 1;
-          prev = current;
-          continue;
-        }
+        if (diff === 1) { streak += 1; prev = cur; continue; }
         break;
       }
     }
-
     const lastLog = sortedLogs[0];
     const lastLogMoment = lastLog ? moment(lastLog.created_at) : null;
-
     return { totalLogs, todayCount, weekCount, streak, lastLogMoment };
-  }, [sortedLogs, uniqueSortedDays]);
-
-  const logsByDate = useMemo(() => {
-    return sortedLogs.reduce((acc, log) => {
-      const key = moment(log.created_at).format('YYYY-MM-DD');
-      acc[key] = (acc[key] || 0) + 1;
-      return acc;
-    }, {});
   }, [sortedLogs]);
 
   // date => [savedKeyword labels]
@@ -206,48 +119,9 @@ const MainPage = () => {
       });
     });
     const result = {};
-    Object.keys(setMap).forEach((d) => {
-      result[d] = Array.from(setMap[d]);
-    });
+    Object.keys(setMap).forEach((d) => { result[d] = Array.from(setMap[d]); });
     return result;
   }, [sortedLogs, savedKeywords]);
-
-  const handleRefresh = () => {
-    setLoading(true);
-    window.setTimeout(() => {
-      setRawLogs(getLogsFromStorage());
-      setSavedKeywords(readSavedKeywords());
-      setLoading(false);
-    }, 80);
-  };
-
-  const renderPreview = (log) => {
-    const content = (log.content || '').toString();
-    const preview = content.length > 220 ? `${content.slice(0, 220)}…` : content;
-    if (!trimmedSearch) return preview;
-    return highlight(preview, trimmedSearch);
-  };
-
-  const toggleKeyword = (k) => {
-    setSelectedKeywords((prev) => (prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k]));
-  };
-
-  const removeSavedKeyword = (k) => {
-    const next = (savedKeywords || []).filter((x) => x !== k);
-    setSavedKeywords(next);
-    setSelectedKeywords((prev) => prev.filter((x) => x !== k));
-    writeSavedKeywords(next);
-  };
-
-  const saveCurrentSearchAsKeyword = () => {
-    const k = trimmedSearch.trim();
-    if (!k) return;
-    if ((savedKeywords || []).includes(k)) return;
-    const nextAll = [k, ...(savedKeywords || [])];
-    const limited = Array.from(new Set(nextAll)).slice(0, 5);
-    setSavedKeywords(limited);
-    writeSavedKeywords(limited);
-  };
 
   const addSavedKeyword = () => {
     const k = savedKeywordInput.trim();
@@ -258,6 +132,12 @@ const MainPage = () => {
     setSavedKeywords(limited);
     writeSavedKeywords(limited);
     setSavedKeywordInput('');
+  };
+
+  const removeSavedKeyword = (k) => {
+    const next = (savedKeywords || []).filter((x) => x !== k);
+    setSavedKeywords(next);
+    writeSavedKeywords(next);
   };
 
   return (
@@ -273,7 +153,7 @@ const MainPage = () => {
                     {moment().format('YYYY년 M월 D일 dddd')}
                   </Card.Subtitle>
                 </div>
-                <Button variant="outline-secondary" size="sm" onClick={() => navigate('/new-log')}>
+                <Button variant="outline-secondary" size="sm" onClick={() => (window.location.href = '/new-log')}>
                   새 기록
                 </Button>
               </div>
@@ -305,27 +185,39 @@ const MainPage = () => {
             <Card.Body>
               <div className="d-flex justify-content-between align-items-center mb-2">
                 <Card.Title as="h2" className="h5 mb-0">기록 달력</Card.Title>
-                <Form.Check
-                  type="switch"
-                  id="toggle-date-filter"
-                  label="전체 보기"
-                  checked={!restrictToDate}
-                  onChange={(e) => setRestrictToDate(!e.target.checked)}
-                />
               </div>
+
+              {/* Saved keywords manager above calendar */}
+              <div className="mb-2" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                <Form.Control
+                  type="text"
+                  value={savedKeywordInput}
+                  onChange={(e) => setSavedKeywordInput(e.target.value)}
+                  placeholder="저장할 키워드 입력 (최대 5개)"
+                  style={{ width: 200 }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addSavedKeyword(); } }}
+                />
+                <Button variant="outline-secondary" size="sm" disabled={!savedKeywordInput.trim() || (savedKeywords?.length || 0) >= 5} onClick={addSavedKeyword}>
+                  추가 ({(savedKeywords?.length || 0)}/5)
+                </Button>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {savedKeywords && savedKeywords.length > 0 && savedKeywords.map((k) => (
+                    <div key={k} className="d-inline-flex align-items-center gap-1">
+                      <Button variant="outline-secondary" size="sm" onClick={() => removeSavedKeyword(k)} title="삭제">{k} ×</Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <Calendar
                 className="voice-calendar"
                 locale="ko"
                 value={selectedDate}
-                onChange={(value) => {
-                  setSelectedDate(Array.isArray(value) ? value[0] : value);
-                  setRestrictToDate(true);
-                }}
+                onChange={(value) => setSelectedDate(Array.isArray(value) ? value[0] : value)}
                 tileClassName={({ date, view }) => {
                   if (view !== 'month') return null;
                   const key = moment(date).format('YYYY-MM-DD');
                   const classes = [];
-                  if (logsByDate[key]) classes.push('has-log');
                   if ((savedKeywordHitsByDate[key] || []).length) classes.push('has-search-keyword');
                   return classes.join(' ');
                 }}

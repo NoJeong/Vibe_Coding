@@ -13,8 +13,6 @@ const saveLogsToStorage = (logs) => {
   localStorage.setItem('voiceLogs', JSON.stringify(logs));
 };
 
-// Note: Saved(interest) keywords are now managed on MainPage only.
-
 const LogForm = () => {
   const [content, setContent] = useState('');
   const [logDate, setLogDate] = useState(moment().format('YYYY-MM-DD'));
@@ -22,8 +20,6 @@ const LogForm = () => {
   const [isFetching, setIsFetching] = useState(false);
   const [error, setError] = useState(null);
   const [isListening, setIsListening] = useState(false);
-  const [keywords, setKeywords] = useState([]);
-  const [keywordInput, setKeywordInput] = useState('');
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -59,7 +55,7 @@ const LogForm = () => {
     if (offlineStt) {
       try {
         finalTranscriptRef.current = content;
-                sttListenerRef.current = await offlineStt.addListener('sttResult', ({ text, isFinal }) => {
+        sttListenerRef.current = await offlineStt.addListener('sttResult', ({ text, isFinal }) => {
           if (typeof text !== 'string') return;
           if (isFinal) {
             finalTranscriptRef.current += text + ' ';
@@ -72,13 +68,13 @@ const LogForm = () => {
         setIsListening(true);
         return;
       } catch (e) {
-        toast.error('오프라인 음성 인식을 시작할 수 없습니다. 웹 음성 인식으로 시도합니다.');
+        toast.error('오프라인 음성인식 시작 실패. 브라우저 음성인식으로 시도하세요.');
       }
     }
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      toast.error('이 환경에서는 웹 음성 인식을 지원하지 않습니다.');
+      toast.error('이 환경에서는 음성 인식이 지원되지 않습니다.');
       return;
     }
 
@@ -119,8 +115,6 @@ const LogForm = () => {
     recognition.start();
   };
 
-  
-
   useEffect(() => {
     if (isEditing) {
       setIsFetching(true);
@@ -130,10 +124,9 @@ const LogForm = () => {
       if (foundLog) {
         setContent(foundLog.content);
         setLogDate(moment(foundLog.created_at).format('YYYY-MM-DD'));
-        setKeywords(Array.isArray(foundLog.keywords) ? foundLog.keywords : []);
       } else {
         toast.error('해당 기록을 찾을 수 없습니다.');
-        setError('해당 ID의 기록을 찾을 수 없습니다.');
+        setError('Invalid log id');
       }
       setIsFetching(false);
     } else if (location.state?.selectedDate) {
@@ -148,13 +141,13 @@ const LogForm = () => {
     let allLogs = getLogsFromStorage();
     if (isEditing) {
       const logId = parseInt(id, 10);
-      allLogs = allLogs.map(log => log.id === logId ? { ...log, content, keywords, created_at: moment(logDate).toISOString() } : log);
+      allLogs = allLogs.map(log => log.id === logId ? { ...log, content, created_at: moment(logDate).toISOString() } : log);
     } else {
-      allLogs = [{ id: Date.now(), content, keywords, created_at: moment(logDate).toISOString() }, ...allLogs];
+      allLogs = [{ id: Date.now(), content, created_at: moment(logDate).toISOString() }, ...allLogs];
     }
     saveLogsToStorage(allLogs);
     setIsLoading(false);
-    toast.success(isEditing ? '기록을 수정했습니다.' : '새 기록을 생성했습니다.');
+    toast.success(isEditing ? '기록이 수정되었습니다.' : '새 기록이 생성되었습니다.');
     navigate('/');
   };
 
@@ -176,52 +169,10 @@ const LogForm = () => {
           <div className="d-flex justify-content-between align-items-center">
             <Form.Label>기록 내용</Form.Label>
             <Button variant={isListening ? 'danger' : 'outline-primary'} size="sm" onClick={isListening ? stopRecognition : startRecognition}>
-              {isListening ? '음성 인식 중지' : '음성으로 입력'}
+              {isListening ? '음성 인식 중' : '음성으로 입력'}
             </Button>
           </div>
-          <Form.Control as="textarea" rows={10} placeholder="음성으로 입력 버튼을 누르거나, 직접 입력하세요" value={content} onChange={(e) => setContent(e.target.value)} required />
-        </Form.Group>
-
-        <Form.Group className="mb-3" controlId="formKeywords">
-          <Form.Label>키워드</Form.Label>
-          <div className="d-flex gap-2 mb-2">
-            <Form.Control
-              type="text"
-              placeholder="쉼표 또는 Enter로 추가 (예: 운동, 회의)"
-              value={keywordInput}
-              onChange={(e) => setKeywordInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ',') {
-                  e.preventDefault();
-                  const k = keywordInput.trim();
-                  if (k && !keywords.includes(k)) setKeywords((prev) => [...prev, k]);
-                  setKeywordInput('');
-                }
-              }}
-            />
-            <Button
-              variant="outline-secondary"
-              onClick={(e) => {
-                e.preventDefault();
-                const k = keywordInput.trim();
-                if (k && !keywords.includes(k)) setKeywords((prev) => [...prev, k]);
-                setKeywordInput('');
-              }}
-            >추가</Button>
-          </div>
-          <div className="d-flex flex-wrap gap-2">
-            {keywords.map((k) => (
-              <span
-                key={k}
-                className="badge bg-secondary"
-                style={{ cursor: 'pointer' }}
-                onClick={() => setKeywords((prev) => prev.filter((x) => x !== k))}
-                title="클릭하여 제거"
-              >
-                {k} ×
-              </span>
-            ))}
-          </div>
+          <Form.Control as="textarea" rows={10} placeholder="음성 입력 버튼을 누르거나, 직접 입력하세요" value={content} onChange={(e) => setContent(e.target.value)} required />
         </Form.Group>
 
         {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
@@ -236,3 +187,4 @@ const LogForm = () => {
 };
 
 export default LogForm;
+
