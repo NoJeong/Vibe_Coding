@@ -18,6 +18,9 @@ voice-app/client/build/
 **/build/
 voice-app/android/app/release/
 voice-app/android/local.properties
+voice-app/android/gradle.properties
+voice-app/android/app/release.keystore
+*.keystore
 
 # iOS (if ever added)
 ios/build/

@@ -27,6 +27,7 @@ const LogForm = () => {
 
   const recognitionRef = useRef(null);
   const finalTranscriptRef = useRef('');
+  const lastFinalChunkRef = useRef('');
   const sttListenerRef = useRef(null);
   const isNative = typeof window !== 'undefined' && !!window.Capacitor?.getPlatform && window.Capacitor.getPlatform() !== 'web';
   const offlineStt = isNative ? window.Capacitor?.Plugins?.OfflineStt : null;
@@ -57,11 +58,29 @@ const LogForm = () => {
         finalTranscriptRef.current = content;
         sttListenerRef.current = await offlineStt.addListener('sttResult', ({ text, isFinal }) => {
           if (typeof text !== 'string') return;
+          const chunk = String(text).trim();
           if (isFinal) {
-            finalTranscriptRef.current += text + ' ';
+            // Many engines emit cumulative final text. If the new chunk starts with the
+            // current final transcript, treat it as an update rather than an append.
+            const base = finalTranscriptRef.current.trim();
+            if (chunk) {
+              if (chunk.startsWith(base)) {
+                // Replace with cumulative final
+                finalTranscriptRef.current = (chunk + ' ').replace(/\s+/g, ' ');
+              } else if (base.endsWith(chunk)) {
+                // Duplicate tail; ignore
+                // no change
+              } else if (chunk === lastFinalChunkRef.current) {
+                // Same final emitted again; ignore
+              } else {
+                finalTranscriptRef.current = (base + ' ' + chunk + ' ').replace(/\s+/g, ' ');
+              }
+              lastFinalChunkRef.current = chunk;
+            }
             setContent(finalTranscriptRef.current);
           } else {
-            setContent(finalTranscriptRef.current + text);
+            // Interim: show preview as final + interim
+            setContent((finalTranscriptRef.current + chunk).replace(/\s+/g, ' '));
           }
         });
         await offlineStt.start({ language: 'ko-KR' });
@@ -93,14 +112,24 @@ const LogForm = () => {
       let interimTranscript = '';
       let finalTranscript = finalTranscriptRef.current;
       for (let i = event.resultIndex; i < event.results.length; ++i) {
+        const segRaw = event.results[i][0]?.transcript ?? '';
         if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript;
+          const seg = String(segRaw).trim();
+          const base = finalTranscript.trim();
+          if (seg) {
+            if (seg.startsWith(base)) {
+              finalTranscript = seg + ' ';
+            } else if (!base.endsWith(seg) && seg !== lastFinalChunkRef.current) {
+              finalTranscript = (base + ' ' + seg + ' ').replace(/\s+/g, ' ');
+            }
+            lastFinalChunkRef.current = seg;
+          }
         } else {
-          interimTranscript += event.results[i][0].transcript;
+          interimTranscript += segRaw;
         }
       }
       finalTranscriptRef.current = finalTranscript;
-      setContent(finalTranscript + interimTranscript);
+      setContent((finalTranscript + interimTranscript).replace(/\s+/g, ' '));
     };
 
     recognition.onerror = (event) => {
@@ -187,4 +216,3 @@ const LogForm = () => {
 };
 
 export default LogForm;
-

@@ -1,9 +1,7 @@
-<?xml version='1.0' encoding='utf-8'?>
+ï»¿<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">?ˆìŒ</string>
-    <string name="title_activity_main">?ˆìŒ</string>
-    <string name="package_name">com.example.voicelog</string>
-    <string name="custom_url_scheme">com.example.voicelog</string>
+    <string name="app_name">Haesseum</string>
+    <string name="title_activity_main">Haesseum</string>
+    <string name="package_name">com.haesseum.app</string>
+    <string name="custom_url_scheme">com.haesseum.app</string>
 </resources>
-
-

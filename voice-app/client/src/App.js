@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { Container } from 'react-bootstrap';
-import { Toaster } from 'react-hot-toast'; // Import Toaster
+import { Toaster, toast } from 'react-hot-toast'; // Import Toaster
 import Header from './components/Header';
 import MainPage from './pages/MainPage';
 import RecordsPage from './pages/RecordsPage';
@@ -34,11 +34,44 @@ function App() {
     };
     schedule();
   }, []);
+
+  // Handle Android hardware back button to navigate history / double-back exit
+  React.useEffect(() => {
+    const cap = window.Capacitor;
+    if (!cap || cap.getPlatform?.() === 'web') return;
+    const app = cap.Plugins?.App || cap.App;
+    let lastBackAt = 0;
+    const onBack = () => {
+      const isRoot = window.location.pathname === '/';
+      if (!isRoot) {
+        try { window.history.back(); } catch (_) {}
+        return;
+      }
+      const now = Date.now();
+      if (now - lastBackAt < 2000) {
+        try { app?.exitApp && app.exitApp(); } catch (_) {}
+      } else {
+        lastBackAt = now;
+        try { toast.dismiss(); toast('한 번 더 누르면 종료됩니다', { duration: 1500 }); } catch (_) {}
+      }
+    };
+    let remove;
+    try {
+      if (app?.addListener) {
+        const sub = app.addListener('backButton', onBack);
+        remove = () => { try { sub.remove(); } catch (_) {} };
+      } else {
+        document.addEventListener('backbutton', onBack, false);
+        remove = () => document.removeEventListener('backbutton', onBack, false);
+      }
+    } catch (_) {}
+    return () => { try { remove && remove(); } catch (_) {} };
+  }, []);
   return (
     <Router>
       <Toaster position="top-right" /> {/* Add Toaster component here */}
       <Header />
-      <main style={{ paddingTop: '80px' }}> {/* Add padding to main to avoid overlap with fixed Header */}
+      <main style={{ paddingTop: '72px', paddingBottom: 'env(safe-area-inset-bottom, 24px)' }}> {/* Safe-area padding top/bottom */}
         <Container className="mt-4">
           <Routes>
             <Route path="/" element={<MainPage />} />
