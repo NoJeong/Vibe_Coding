@@ -71,7 +71,7 @@ function App() {
     <Router>
       <Toaster position="top-right" /> {/* Add Toaster component here */}
       <Header />
-      <main style={{ paddingTop: '72px', paddingBottom: 'env(safe-area-inset-bottom, 24px)' }}> {/* Safe-area padding top/bottom */}
+      <main className="app-main">
         <Container className="mt-4">
           <Routes>
             <Route path="/" element={<MainPage />} />
@@ -88,3 +88,4 @@ function App() {
 }
 
 export default App;
+

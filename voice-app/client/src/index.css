@@ -226,25 +226,27 @@ body {
 
 /* Default day with logs */
 .react-calendar__tile.has-log {
-  background-color: var(--calendar-day-log);
+  background: transparent !important;
+  border: none !important;
 }
 
 /* Day with a registered keyword */
 .react-calendar__tile.has-registered-keyword {
-  background-color: var(--calendar-active);
-  border: 1px solid var(--calendar-active-border) !important;
+  background: transparent !important;
+  border: none !important;
 }
 
 /* Day with the searched keyword (priority) */
 .react-calendar__tile.has-search-keyword {
-  background-color: var(--calendar-day-search);
-  border: 1px solid #F5A623 !important; /* Warm orange border */
+  background: transparent !important;
+  border: none !important;
 }
 
 /* Active (selected) day */
 .react-calendar__tile--active {
-  background: var(--calendar-active) !important;
-  border: 1px solid var(--calendar-active-border) !important;
+  background: transparent !important;
+  border: 2px solid var(--primary) !important;
+  color: inherit !important;
 }
 
 /* Hover/Focus (non-selected) */
@@ -255,36 +257,38 @@ body {
 
 /* Today indicator */
 .react-calendar__tile--now {
-  background: var(--calendar-today) !important;
+  background: transparent !important;
   border: 1px solid var(--calendar-today-border) !important;
 }
 
 /* Keyword tags inside calendar days */
 .log-keywords {
   font-size: 0.7em;
-  text-align: center;
+  text-align: left;
   width: 100%;
   margin-top: 2px;
   margin-bottom: 2px;
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 2px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 4px;
   max-height: 64px;
   overflow: hidden;
 }
 
 .keyword-tag {
-  background-color: var(--keyword-tag-bg);
-  border: 1px solid var(--keyword-tag-border);
-  border-radius: 8px;
-  padding: 1px 5px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 95%;
-  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0 0 6px;
+  border-left: 4px solid var(--primary);
+  background: transparent;
   color: var(--keyword-tag-text);
+  font-weight: 600;
+  font-size: 0.75rem;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: visible;
 }
 
 /* Add button on calendar tiles */
@@ -296,7 +300,10 @@ body {
     height: 96px;
     padding: 6px;
   }
-  .log-keywords { font-size: 0.65em; max-height: 56px; }
+  .log-keywords {
+    font-size: 0.65em;
+    max-height: 56px;
+  }
 }
 
 /* Dark theme fixes for Bootstrap utilities */
@@ -311,7 +318,7 @@ body {
 .modal-content { background-color: var(--surface) !important; color: var(--text) !important; }
 .form-control { background-color: var(--surface) !important; color: var(--text) !important; }
 
-/* Hide the legacy inline "Ïù¥ ÎÇ†ÏßúÏóê Í∏∞Î°ù Ï∂îÍ∞Ä" button (kept for compatibility) */
+/* Hide the legacy inline "¿Ã ≥Ø¬•ø° ±‚∑œ √ﬂ∞°" button (kept for compatibility) */
 .d-flex.justify-content-between.align-items-center.mb-3 .btn.btn-secondary {
   display: none !important;
 }
@@ -327,13 +334,26 @@ body {
   border-radius: 28px;
   border: none;
   background: var(--primary);
-  color: #fff;
+  color: transparent;
   font-size: 28px;
-  line-height: 0;
+  line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+  text-decoration: none;
+}
+.fab:focus, .fab:active, .fab:hover, .fab:visited { text-decoration: none; }
+.fab::after {
+  content: "+";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1;
 }
 .fab:hover { background: var(--primary-hover); }
 
@@ -347,3 +367,48 @@ body {
   gap: 4px; padding: 8px;
 }
 .swipe-actions .btn { height: 100%; align-self: stretch; }
+
+.header-logo {
+  height: 55px;
+  width: auto;
+  max-height: 55px;
+}
+
+@media (max-width: 575px) {
+  .header-logo {
+    height: 55px;
+  }
+}
+
+.header-navbar {
+  padding-top: calc(env(safe-area-inset-top, 0) + 8px);
+}
+
+.app-main {
+  padding-top: calc(55px + env(safe-area-inset-top, 0) - 25px);
+  padding-bottom: env(safe-area-inset-bottom, 24px);
+}
+
+.react-calendar__tile abbr {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: inherit;
+}
+
+.react-calendar__tile--active abbr {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: inherit;
+}
+
+
+
+
+
+
+
+
+
+

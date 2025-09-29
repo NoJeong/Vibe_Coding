@@ -210,6 +210,7 @@ const MainPage = () => {
               </div>
 
               <Calendar
+                calendarType="gregory"
                 className="voice-calendar"
                 locale="ko"
                 value={selectedDate}

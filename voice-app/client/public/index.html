@@ -39,5 +39,69 @@
       To begin the development, run `npm start` or `yarn start`.
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
+
+    <script>
+      (function () {
+        if (!window.localStorage) { return; }
+        var STORAGE_KEY = 'voiceLogs';
+        var originalSetItem = window.localStorage.setItem.bind(window.localStorage);
+        function applyTimestampFix(list) {
+          if (!Array.isArray(list)) { return list; }
+          var changed = false;
+          var adjusted = list.map(function (log) {
+            if (!log || typeof log !== 'object') { return log; }
+            var original = log.created_at || log.createdAt;
+            var date = original ? new Date(original) : null;
+            var idMoment = typeof log.id === 'number' ? new Date(log.id) : null;
+            var hasValidDate = date && !isNaN(date.getTime());
+            var hasValidId = idMoment && !isNaN(idMoment.getTime());
+            if (hasValidDate) {
+              if (date.getHours() === 0 && date.getMinutes() === 0 && date.getSeconds() === 0) {
+                var source = hasValidId ? idMoment : new Date();
+                date.setHours(source.getHours(), source.getMinutes(), source.getSeconds(), source.getMilliseconds());
+                changed = true;
+                return Object.assign({}, log, { created_at: date.toISOString() });
+              }
+              return log;
+            }
+            if (hasValidId) {
+              changed = true;
+              return Object.assign({}, log, { created_at: idMoment.toISOString() });
+            }
+            return log;
+          });
+          return changed ? adjusted : list;
+        }
+        function patchValue(key, value) {
+          if (key !== STORAGE_KEY || typeof value !== 'string') { return value; }
+          try {
+            var parsed = JSON.parse(value);
+            var adjusted = applyTimestampFix(parsed);
+            if (adjusted !== parsed) {
+              return JSON.stringify(adjusted);
+            }
+          } catch (err) {
+            console.warn('voice log timestamp patch skipped', err);
+          }
+          return value;
+        }
+        window.localStorage.setItem = function (key, value) {
+          var fixedValue = patchValue(key, value);
+          return originalSetItem(key, fixedValue);
+        };
+        try {
+          var raw = window.localStorage.getItem(STORAGE_KEY);
+          if (!raw) { return; }
+          var parsed = JSON.parse(raw);
+          var adjusted = applyTimestampFix(parsed);
+          if (adjusted !== parsed) {
+            window.localStorage.setItem(STORAGE_KEY, JSON.stringify(adjusted));
+          }
+        } catch (err) {
+          console.warn('voice log timestamp fix skipped', err);
+        }
+      })();
+    </script>
+
   </body>
 </html>
