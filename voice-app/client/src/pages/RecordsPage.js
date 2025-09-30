@@ -1,18 +1,15 @@
-import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Badge, Button, Card, Form, ListGroup, Spinner } from 'react-bootstrap';
 import moment from 'moment';
 import 'moment/locale/ko';
 
-import { LOGS_PER_PAGE } from '../mockData';
+import { LOGS_PER_PAGE, ensureMockData, SAVED_KEYWORDS_KEY, STORAGE_KEY } from '../mockData';
 
-const STORAGE_KEY = 'voiceLogs';
-const SAVED_KEYWORDS_KEY = 'savedKeywords';
-
-const safeParseLogs = (raw) => {
-  if (!raw) return [];
+const safeParseLogs = (source) => {
+  if (!source) return [];
   try {
-    const parsed = JSON.parse(raw);
+    const parsed = Array.isArray(source) ? source : JSON.parse(source);
     if (!Array.isArray(parsed)) return [];
     return parsed
       .filter((entry) => entry && typeof entry === 'object' && (entry.created_at || entry.createdAt))
@@ -23,22 +20,13 @@ const safeParseLogs = (raw) => {
 };
 
 const getLogsFromStorage = () => {
-  if (typeof window === 'undefined') return [];
-  try {
-    return safeParseLogs(window.localStorage.getItem(STORAGE_KEY));
-  } catch (_) {
-    return [];
-  }
+  const { logs } = ensureMockData();
+  return safeParseLogs(logs);
 };
 
 const readSavedKeywords = () => {
-  try {
-    const raw = window.localStorage.getItem(SAVED_KEYWORDS_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
-  } catch (_) {
-    return [];
-  }
+  const { keywords } = ensureMockData();
+  return Array.isArray(keywords) ? keywords.filter(Boolean) : [];
 };
 
 const highlight = (text, keyword) => {
@@ -57,7 +45,9 @@ const RecordsPage = () => {
   const [savedKeywords, setSavedKeywords] = useState([]);
   const [selectedKeywords, setSelectedKeywords] = useState([]);
 
-  useEffect(() => { moment.locale('ko'); }, []);
+  useEffect(() => {
+    moment.locale('ko');
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -93,16 +83,25 @@ const RecordsPage = () => {
   const filteredLogs = useMemo(() => {
     return sortedLogs.filter((log) => {
       const content = (log.content || '').toString();
-      const matchesSearch = !normalizedSearch || content.toLowerCase().includes(normalizedSearch);
+      const contentLower = content.toLowerCase();
+      const matchesSearch = !normalizedSearch || contentLower.includes(normalizedSearch);
       const kw = Array.isArray(log.keywords) ? log.keywords : [];
       const kwLower = kw.map((k) => String(k).toLowerCase());
-      const activeKeywords = searchKeywordTokens.length ? searchKeywordTokens : selectedKeywords.map((k) => k.toLowerCase());
-      const matchesKeywords = activeKeywords.length === 0 || kwLower.some((k) => activeKeywords.includes(k));
+      const activeKeywords = searchKeywordTokens.length
+        ? searchKeywordTokens
+        : selectedKeywords.map((k) => k.toLowerCase());
+      const matchesKeywords =
+        activeKeywords.length === 0 ||
+        kwLower.some((k) => activeKeywords.includes(k)) ||
+        activeKeywords.some((token) => contentLower.includes(token));
       return matchesSearch && matchesKeywords;
     });
   }, [sortedLogs, normalizedSearch, selectedKeywords, searchKeywordTokens]);
 
-  useEffect(() => { setVisibleCount(LOGS_PER_PAGE); }, [trimmedSearch, sortedLogs.length, selectedKeywords.join('|')]);
+  useEffect(() => {
+    setVisibleCount(LOGS_PER_PAGE);
+  }, [trimmedSearch, sortedLogs.length, selectedKeywords.join('|')]);
+
   const visibleLogs = useMemo(() => filteredLogs.slice(0, visibleCount), [filteredLogs, visibleCount]);
   const hasMore = visibleCount < filteredLogs.length;
 
@@ -122,7 +121,9 @@ const RecordsPage = () => {
     return highlight(preview, trimmedSearch);
   };
 
-  const toggleKeyword = (k) => setSelectedKeywords((prev) => (prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k]));
+  const toggleKeyword = (k) => {
+    setSelectedKeywords((prev) => (prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k]));
+  };
 
   return (
     <Card className="shadow-sm border-0">
@@ -131,7 +132,7 @@ const RecordsPage = () => {
           <div>
             <Card.Title as="h1" className="h4 mb-1">나의 기록 보기</Card.Title>
             <Card.Subtitle className="text-muted small">
-              저장한 키워드 칩으로 필터하거나, 검색창을 사용하세요.
+              저장한 키워드를 눌러 필터링하거나 검색창을 활용하세요.
             </Card.Subtitle>
           </div>
           <div className="d-flex gap-2">
@@ -157,7 +158,7 @@ const RecordsPage = () => {
           )}
           <Form.Control
             type="search"
-            placeholder="내용/키워드로 검색해요 (예: 점심 #운동)"
+            placeholder="내용/키워드로 검색 (#태그 지원)"
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
           />
@@ -166,7 +167,7 @@ const RecordsPage = () => {
         {loading ? (
           <div className="flex-grow-1 d-flex align-items-center justify-content-center py-5">
             <Spinner animation="border" role="status">
-              <span className="visually-hidden">불러오는 중…</span>
+              <span className="visually-hidden">불러오는 중</span>
             </Spinner>
           </div>
         ) : visibleLogs.length ? (
@@ -180,7 +181,11 @@ const RecordsPage = () => {
                         <Badge bg="primary" className="text-uppercase">{moment(log.created_at).format('HH:mm')}</Badge>
                         <span className="text-muted small">{moment(log.created_at).format('YYYY년 M월 D일 dddd')}</span>
                       </div>
-                      <div className="fw-semibold" style={{ whiteSpace: 'pre-wrap' }} dangerouslySetInnerHTML={{ __html: renderPreview(log) }} />
+                      <div
+                        className="fw-semibold"
+                        style={{ whiteSpace: 'pre-wrap' }}
+                        dangerouslySetInnerHTML={{ __html: renderPreview(log) }}
+                      />
                       {Array.isArray(log.keywords) && log.keywords.length ? (
                         <div className="mt-1 d-flex flex-wrap gap-1">
                           {log.keywords.map((k) => (
@@ -190,7 +195,7 @@ const RecordsPage = () => {
                       ) : null}
                     </div>
                     <div className="d-flex gap-2 ms-md-auto">
-                      <Button as={Link} to={`/logs/${log.id}`} variant="outline-primary" size="sm">상세</Button>
+                      <Button as={Link} to={`/logs/${log.id}`} variant="outline-primary" size="sm">자세히</Button>
                       <Button as={Link} to={`/edit-log/${log.id}`} variant="outline-secondary" size="sm">수정</Button>
                     </div>
                   </div>
@@ -199,7 +204,9 @@ const RecordsPage = () => {
             </ListGroup>
             {hasMore && (
               <div className="text-center mt-3">
-                <Button variant="outline-secondary" onClick={() => setVisibleCount((prev) => prev + LOGS_PER_PAGE)}>더 보기</Button>
+                <Button variant="outline-secondary" onClick={() => setVisibleCount((prev) => prev + LOGS_PER_PAGE)}>
+                  더 보기
+                </Button>
               </div>
             )}
           </>
@@ -207,10 +214,10 @@ const RecordsPage = () => {
           <div className="flex-grow-1 d-flex flex-column align-items-center justify-content-center text-center py-5">
             <h2 className="h5 mb-2">표시할 기록이 없습니다.</h2>
             <p className="text-muted mb-3">
-              {trimmedSearch ? '검색어를 변경하거나 초기화해 보세요' : '새로 기록을 작성해 보세요'}
+              {trimmedSearch ? '검색어를 변경하거나 초기화해 보세요.' : '먼저 새로운 기록을 작성해 보세요.'}
             </p>
             <div className="d-flex gap-2">
-              <Button variant="primary" onClick={() => navigate('/new-log')}>새 기록 작성하기</Button>
+              <Button variant="primary" onClick={() => navigate('/new-log')}>새 기록 작성</Button>
               {trimmedSearch && (
                 <Button variant="outline-secondary" onClick={() => setSearchTerm('')}>검색 초기화</Button>
               )}
@@ -223,4 +230,3 @@ const RecordsPage = () => {
 };
 
 export default RecordsPage;
-

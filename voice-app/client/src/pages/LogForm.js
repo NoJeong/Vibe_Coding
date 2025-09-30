@@ -3,14 +3,18 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Form, Button, Spinner, Alert } from 'react-bootstrap';
 import moment from 'moment';
 import toast from 'react-hot-toast';
+import { ensureMockData, STORAGE_KEY } from '../mockData';
 
 const getLogsFromStorage = () => {
-  const logs = localStorage.getItem('voiceLogs');
-  return logs ? JSON.parse(logs) : [];
+  const { logs } = ensureMockData();
+  return Array.isArray(logs) ? logs : [];
 };
 
 const saveLogsToStorage = (logs) => {
-  localStorage.setItem('voiceLogs', JSON.stringify(logs));
+  if (typeof window === 'undefined' || !window.localStorage) return;
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+  } catch (_) {}
 };
 
 const LogForm = () => {

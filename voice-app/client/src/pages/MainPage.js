@@ -1,17 +1,15 @@
-import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
 import { Button, Card, Col, Form, Row, Stack } from 'react-bootstrap';
 import Calendar from 'react-calendar';
 import moment from 'moment';
+import { ensureMockData, SAVED_KEYWORDS_KEY, STORAGE_KEY } from '../mockData';
 import 'moment/locale/ko';
 import 'react-calendar/dist/Calendar.css';
 
-const STORAGE_KEY = 'voiceLogs';
-const SAVED_KEYWORDS_KEY = 'savedKeywords';
-
-const safeParseLogs = (raw) => {
-  if (!raw) return [];
+const safeParseLogs = (source) => {
+  if (!source) return [];
   try {
-    const parsed = JSON.parse(raw);
+    const parsed = Array.isArray(source) ? source : JSON.parse(source);
     if (!Array.isArray(parsed)) return [];
     return parsed
       .filter((entry) => entry && typeof entry === 'object' && (entry.created_at || entry.createdAt))
@@ -22,22 +20,13 @@ const safeParseLogs = (raw) => {
 };
 
 const getLogsFromStorage = () => {
-  if (typeof window === 'undefined') return [];
-  try {
-    return safeParseLogs(window.localStorage.getItem(STORAGE_KEY));
-  } catch (_) {
-    return [];
-  }
+  const { logs } = ensureMockData();
+  return safeParseLogs(logs);
 };
 
 const readSavedKeywords = () => {
-  try {
-    const raw = window.localStorage.getItem(SAVED_KEYWORDS_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
-  } catch (_) {
-    return [];
-  }
+  const { keywords } = ensureMockData();
+  return Array.isArray(keywords) ? keywords.filter(Boolean) : [];
 };
 
 const writeSavedKeywords = (list) => {
@@ -53,7 +42,9 @@ const MainPage = () => {
   const [savedKeywords, setSavedKeywords] = useState([]);
   const [savedKeywordInput, setSavedKeywordInput] = useState('');
 
-  useEffect(() => { moment.locale('ko'); }, []);
+  useEffect(() => {
+    moment.locale('ko');
+  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -80,27 +71,29 @@ const MainPage = () => {
   const stats = useMemo(() => {
     const now = moment();
     const totalLogs = sortedLogs.length;
-    const todayCount = sortedLogs.filter((log) => moment(log.created_at).isSame(now, 'day')).length;
     const weekCount = sortedLogs.filter((log) => moment(log.created_at).isSame(now, 'week')).length;
     let streak = 0;
     const uniqueDays = Array.from(new Set(sortedLogs.map((log) => moment(log.created_at).format('YYYY-MM-DD'))));
     if (uniqueDays.length) {
       streak = 1;
       let prev = moment(uniqueDays[0], 'YYYY-MM-DD');
-      for (let i = 1; i < uniqueDays.length; i++) {
+      for (let i = 1; i < uniqueDays.length; i += 1) {
         const cur = moment(uniqueDays[i], 'YYYY-MM-DD');
         const diff = prev.diff(cur, 'day');
         if (diff === 0) continue;
-        if (diff === 1) { streak += 1; prev = cur; continue; }
+        if (diff === 1) {
+          streak += 1;
+          prev = cur;
+          continue;
+        }
         break;
       }
     }
     const lastLog = sortedLogs[0];
     const lastLogMoment = lastLog ? moment(lastLog.created_at) : null;
-    return { totalLogs, todayCount, weekCount, streak, lastLogMoment };
+    return { totalLogs, weekCount, streak, lastLogMoment };
   }, [sortedLogs]);
 
-  // date => [savedKeyword labels]
   const savedKeywordHitsByDate = useMemo(() => {
     if (!savedKeywords || !savedKeywords.length) return {};
     const setMap = {};
@@ -119,14 +112,19 @@ const MainPage = () => {
       });
     });
     const result = {};
-    Object.keys(setMap).forEach((d) => { result[d] = Array.from(setMap[d]); });
+    Object.keys(setMap).forEach((d) => {
+      result[d] = Array.from(setMap[d]);
+    });
     return result;
   }, [sortedLogs, savedKeywords]);
 
   const addSavedKeyword = () => {
     const k = savedKeywordInput.trim();
     if (!k) return;
-    if ((savedKeywords || []).includes(k)) { setSavedKeywordInput(''); return; }
+    if ((savedKeywords || []).includes(k)) {
+      setSavedKeywordInput('');
+      return;
+    }
     const nextAll = [k, ...(savedKeywords || [])];
     const limited = Array.from(new Set(nextAll)).slice(0, 5);
     setSavedKeywords(limited);
@@ -175,7 +173,7 @@ const MainPage = () => {
                 {stats.lastLogMoment ? (
                   <span>최근 기록: {stats.lastLogMoment.format('YYYY년 M월 D일 HH:mm')}</span>
                 ) : (
-                  <span>아직 작성한 기록이 없습니다.</span>
+                  <span>아직 생성된 기록이 없습니다.</span>
                 )}
               </div>
             </Card.Body>
@@ -187,7 +185,6 @@ const MainPage = () => {
                 <Card.Title as="h2" className="h5 mb-0">기록 달력</Card.Title>
               </div>
 
-              {/* Saved keywords manager above calendar */}
               <div className="mb-2" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                 <Form.Control
                   type="text"
@@ -195,15 +192,27 @@ const MainPage = () => {
                   onChange={(e) => setSavedKeywordInput(e.target.value)}
                   placeholder="저장할 키워드 입력 (최대 5개)"
                   style={{ width: 200 }}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addSavedKeyword(); } }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ',') {
+                      e.preventDefault();
+                      addSavedKeyword();
+                    }
+                  }}
                 />
-                <Button variant="outline-secondary" size="sm" disabled={!savedKeywordInput.trim() || (savedKeywords?.length || 0) >= 5} onClick={addSavedKeyword}>
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  disabled={!savedKeywordInput.trim() || (savedKeywords?.length || 0) >= 5}
+                  onClick={addSavedKeyword}
+                >
                   추가 ({(savedKeywords?.length || 0)}/5)
                 </Button>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {savedKeywords && savedKeywords.length > 0 && savedKeywords.map((k) => (
                     <div key={k} className="d-inline-flex align-items-center gap-1">
-                      <Button variant="outline-secondary" size="sm" onClick={() => removeSavedKeyword(k)} title="삭제">{k} ×</Button>
+                      <Button variant="outline-secondary" size="sm" onClick={() => removeSavedKeyword(k)} title="삭제">
+                        {k} ×
+                      </Button>
                     </div>
                   ))}
                 </div>
