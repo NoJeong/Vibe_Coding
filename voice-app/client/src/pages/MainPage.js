@@ -67,32 +67,8 @@ const MainPage = () => {
     () => [...rawLogs].filter((l) => l.created_at).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)),
     [rawLogs]
   );
+  const lastLogMoment = useMemo(() => (sortedLogs[0] ? moment(sortedLogs[0].created_at) : null), [sortedLogs]);
 
-  const stats = useMemo(() => {
-    const now = moment();
-    const totalLogs = sortedLogs.length;
-    const weekCount = sortedLogs.filter((log) => moment(log.created_at).isSame(now, 'week')).length;
-    let streak = 0;
-    const uniqueDays = Array.from(new Set(sortedLogs.map((log) => moment(log.created_at).format('YYYY-MM-DD'))));
-    if (uniqueDays.length) {
-      streak = 1;
-      let prev = moment(uniqueDays[0], 'YYYY-MM-DD');
-      for (let i = 1; i < uniqueDays.length; i += 1) {
-        const cur = moment(uniqueDays[i], 'YYYY-MM-DD');
-        const diff = prev.diff(cur, 'day');
-        if (diff === 0) continue;
-        if (diff === 1) {
-          streak += 1;
-          prev = cur;
-          continue;
-        }
-        break;
-      }
-    }
-    const lastLog = sortedLogs[0];
-    const lastLogMoment = lastLog ? moment(lastLog.created_at) : null;
-    return { totalLogs, weekCount, streak, lastLogMoment };
-  }, [sortedLogs]);
 
   const savedKeywordHitsByDate = useMemo(() => {
     if (!savedKeywords || !savedKeywords.length) return {};
@@ -144,70 +120,42 @@ const MainPage = () => {
         <Stack gap={3}>
           <Card className="shadow-sm border-0">
             <Card.Body>
-              <div className="d-flex justify-content-between align-items-start mb-3">
-                <div>
-                  <Card.Title as="h2" className="h4 mb-2">오늘 요약</Card.Title>
-                  <Card.Subtitle className="text-muted small">
-                    {moment().format('YYYY년 M월 D일 dddd')}
-                  </Card.Subtitle>
-                </div>
-                <Button variant="outline-secondary" size="sm" onClick={() => (window.location.href = '/new-log')}>
-                  새 기록
-                </Button>
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <Card.Title as="h2" className="h5 mb-0">기록 달력</Card.Title>
               </div>
-              <Row className="text-center g-3">
-                <Col xs={4}>
-                  <div className="fw-bold fs-4">{stats.totalLogs}</div>
-                  <div className="text-muted small">총 기록</div>
-                </Col>
-                <Col xs={4}>
-                  <div className="fw-bold fs-4">{stats.weekCount}</div>
-                  <div className="text-muted small">이번 주</div>
-                </Col>
-                <Col xs={4}>
-                  <div className="fw-bold fs-4">{stats.streak}</div>
-                  <div className="text-muted small">연속</div>
-                </Col>
-              </Row>
-              <div className="mt-3 small text-muted">
-                {stats.lastLogMoment ? (
-                  <span>최근 기록: {stats.lastLogMoment.format('YYYY년 M월 D일 HH:mm')}</span>
+              <div className="mt-2 small text-muted">
+                {lastLogMoment ? (
+                  <span>최근 기록: {lastLogMoment.format('YYYY년 M월 D일 HH:mm')}</span>
                 ) : (
                   <span>아직 생성된 기록이 없습니다.</span>
                 )}
               </div>
-            </Card.Body>
-          </Card>
 
-          <Card className="shadow-sm border-0">
-            <Card.Body>
-              <div className="d-flex justify-content-between align-items-center mb-2">
-                <Card.Title as="h2" className="h5 mb-0">기록 달력</Card.Title>
-              </div>
-
-              <div className="mb-2" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                <Form.Control
-                  type="text"
-                  value={savedKeywordInput}
-                  onChange={(e) => setSavedKeywordInput(e.target.value)}
-                  placeholder="저장할 키워드 입력 (최대 5개)"
-                  style={{ width: 200 }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ',') {
-                      e.preventDefault();
-                      addSavedKeyword();
-                    }
-                  }}
-                />
-                <Button
-                  variant="outline-secondary"
-                  size="sm"
-                  disabled={!savedKeywordInput.trim() || (savedKeywords?.length || 0) >= 5}
-                  onClick={addSavedKeyword}
-                >
-                  추가 ({(savedKeywords?.length || 0)}/5)
-                </Button>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <div className="saved-keyword-row mb-2">
+                <div className="saved-keyword-controls">
+                  <Form.Control
+                    type="text"
+                    value={savedKeywordInput}
+                    onChange={(e) => setSavedKeywordInput(e.target.value)}
+                    placeholder="저장할 키워드 입력 (최대 5개)"
+                    className="saved-keyword-input"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ',') {
+                        e.preventDefault();
+                        addSavedKeyword();
+                      }
+                    }}
+                  />
+                  <Button
+                    variant="outline-secondary"
+                    size="sm"
+                    disabled={!savedKeywordInput.trim() || (savedKeywords?.length || 0) >= 5}
+                    onClick={addSavedKeyword}
+                  >
+                    추가 ({(savedKeywords?.length || 0)}/5)
+                  </Button>
+                </div>
+                <div className="saved-keyword-tags">
                   {savedKeywords && savedKeywords.length > 0 && savedKeywords.map((k) => (
                     <div key={k} className="d-inline-flex align-items-center gap-1">
                       <Button variant="outline-secondary" size="sm" onClick={() => removeSavedKeyword(k)} title="삭제">

@@ -23,8 +23,8 @@ function App() {
         await LN.schedule({
           notifications: [{
             id: 2100,
-            title: '오늘 무엇을 했나요?',
-            body: '한 줄로라도 기록을 남겨 보세요.',
+            title: '?�늘 무엇???�나??',
+            body: '??줄로?�도 기록???�겨 보세??',
             schedule: { at: new Date(new Date().setHours(21, 0, 0, 0)), repeats: true, every: 'day' }
           }]
         });
@@ -52,7 +52,7 @@ function App() {
         try { app?.exitApp && app.exitApp(); } catch (_) {}
       } else {
         lastBackAt = now;
-        try { toast.dismiss(); toast('한 번 더 누르면 종료됩니다', { duration: 1500 }); } catch (_) {}
+        try { toast.dismiss(); toast('Press back again to exit', { duration: 1500 }); } catch (_) {}
       }
     };
     let remove;
@@ -72,7 +72,7 @@ function App() {
       <Toaster position="top-right" /> {/* Add Toaster component here */}
       <Header />
       <main className="app-main">
-        <Container className="mt-4">
+        <Container fluid className="mt-4 px-3 px-lg-5">
           <Routes>
             <Route path="/" element={<MainPage />} />
             <Route path="/records" element={<RecordsPage />} />
@@ -82,10 +82,12 @@ function App() {
           </Routes>
         </Container>
       </main>
-      <Link to={{ pathname: "/new-log", search: "?voice=true" }} className="fab" aria-label="새 기록 추가">+</Link>
+      <Link to={{ pathname: "/new-log", search: "?voice=true" }} className="fab" aria-label="??기록 추�?">+</Link>
     </Router>
   );
 }
 
 export default App;
+
+
 

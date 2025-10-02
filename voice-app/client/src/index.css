@@ -318,7 +318,7 @@ body {
 .modal-content { background-color: var(--surface) !important; color: var(--text) !important; }
 .form-control { background-color: var(--surface) !important; color: var(--text) !important; }
 
-/* Hide the legacy inline "ÀÌ ³¯Â¥¿¡ ±â·Ï Ãß°¡" button (kept for compatibility) */
+/* Hide the legacy inline "ï¿½ï¿½ ï¿½ï¿½Â¥ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ß°ï¿½" button (kept for compatibility) */
 .d-flex.justify-content-between.align-items-center.mb-3 .btn.btn-secondary {
   display: none !important;
 }
@@ -412,3 +412,102 @@ body {
 
 
 
+.header-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text);
+  flex-wrap: nowrap;
+}
+
+.header-stats-inline {
+  flex: 1 1 auto;
+  justify-content: center;
+  min-width: 0;
+}
+
+.header-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 48px;
+}
+
+.header-stat-value {
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.1;
+}
+
+.header-stat-label {
+  font-size: 0.7rem;
+  letter-spacing: -0.01em;
+}
+
+@media (max-width: 767.98px) {
+  .header-stats-inline {
+    justify-content: flex-start;
+    gap: 0.5rem;
+  }
+  .header-stat {
+    min-width: 44px;
+  }
+  .header-stat-value {
+    font-size: 0.88rem;
+  }
+}
+
+@media (min-width: 992px) {
+  .header-stats {
+    gap: 1.25rem;
+  }
+  .header-stats-inline {
+    justify-content: center;
+  }
+  .header-stat {
+    min-width: 60px;
+  }
+  .header-stat-value {
+    font-size: 1.05rem;
+  }
+  .header-stat-label {
+    font-size: 0.75rem;
+  }
+}
+.saved-keyword-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.saved-keyword-controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.saved-keyword-input {
+  flex: 1 1 180px;
+  min-width: 140px;
+  max-width: 220px;
+}
+
+.saved-keyword-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+@media (max-width: 575.98px) {
+  .saved-keyword-controls {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .saved-keyword-input {
+    flex: 1 1 150px;
+    max-width: 100%;
+  }
+}

@@ -4,6 +4,7 @@ import { Form, Button, Spinner, Alert } from 'react-bootstrap';
 import moment from 'moment';
 import toast from 'react-hot-toast';
 import { ensureMockData, STORAGE_KEY } from '../mockData';
+import { dispatchLogsUpdated } from '../utils/logStats';
 
 const getLogsFromStorage = () => {
   const { logs } = ensureMockData();
@@ -14,6 +15,7 @@ const saveLogsToStorage = (logs) => {
   if (typeof window === 'undefined' || !window.localStorage) return;
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+    dispatchLogsUpdated();
   } catch (_) {}
 };
 
@@ -220,3 +222,4 @@ const LogForm = () => {
 };
 
 export default LogForm;
+

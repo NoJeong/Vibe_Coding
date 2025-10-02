@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Card, Button, Spinner, Alert, ButtonGroup } from 'react-bootstrap';
 import toast from 'react-hot-toast';
+import { dispatchLogsUpdated } from '../utils/logStats';
 
 const getLogsFromStorage = () => {
   const logs = localStorage.getItem('voiceLogs');
@@ -9,7 +10,12 @@ const getLogsFromStorage = () => {
 };
 
 const saveLogsToStorage = (logs) => {
-  localStorage.setItem('voiceLogs', JSON.stringify(logs));
+  try {
+    localStorage.setItem('voiceLogs', JSON.stringify(logs));
+    dispatchLogsUpdated();
+  } catch (_) {
+    // ignore storage errors
+  }
 };
 
 const LogDetailPage = () => {
