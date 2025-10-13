@@ -1,7 +1,15 @@
-{
+﻿{
+  "private": true,
   "dependencies": {
     "@capacitor/android": "^7.4.3",
     "@capacitor/cli": "^7.4.3",
     "@capacitor/core": "^7.4.3"
+  },
+  "scripts": {
+    "build:client": "npm --prefix client run build",
+    "sync:android": "npx cap sync android",
+    "android:gradle-release": "cd android && gradlew.bat assembleRelease",
+    "build:android-release": "npm run build:client && npm run sync:android && npm run android:gradle-release"
   }
 }
+
