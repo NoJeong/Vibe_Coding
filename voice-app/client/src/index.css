@@ -318,7 +318,7 @@ body {
 .modal-content { background-color: var(--surface) !important; color: var(--text) !important; }
 .form-control { background-color: var(--surface) !important; color: var(--text) !important; }
 
-/* Hide the legacy inline "�� ��¥�� ��� �߰�" button (kept for compatibility) */
+/* Hide the legacy inline "Add voice log" button (kept for compatibility) */
 .d-flex.justify-content-between.align-items-center.mb-3 .btn.btn-secondary {
   display: none !important;
 }
@@ -509,5 +509,33 @@ body {
   .saved-keyword-input {
     flex: 1 1 150px;
     max-width: 100%;
+  }
+}
+@media (max-width: 991.98px) {
+  .header-navbar .navbar-collapse {
+    width: 100%;
+  }
+  .header-navbar .navbar-collapse:not(.show) {
+    display: none;
+  }
+  .header-navbar .navbar-collapse.show {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .header-navbar .navbar-collapse.show .navbar-nav {
+    width: 100%;
+    gap: 0.85rem;
+    flex-direction: column;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .header-navbar .navbar-collapse.show .navbar-nav .nav-link {
+    width: 100%;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 }

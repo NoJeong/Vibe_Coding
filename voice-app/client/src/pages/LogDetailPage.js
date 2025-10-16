@@ -2,16 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Card, Button, Spinner, Alert, ButtonGroup } from 'react-bootstrap';
 import toast from 'react-hot-toast';
-import { dispatchLogsUpdated } from '../utils/logStats';
-
-const getLogsFromStorage = () => {
-  const logs = localStorage.getItem('voiceLogs');
-  return logs ? JSON.parse(logs) : [];
-};
+import { getLogsFromStorage as loadStoredLogs, dispatchLogsUpdated } from '../utils/logStats';
+import { STORAGE_KEY } from '../mockData';
 
 const saveLogsToStorage = (logs) => {
+  if (typeof window === "undefined" || !window.localStorage) return;
   try {
-    localStorage.setItem('voiceLogs', JSON.stringify(logs));
+    const safeLogs = Array.isArray(logs) ? logs : [];
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(safeLogs));
     dispatchLogsUpdated();
   } catch (_) {
     // ignore storage errors
@@ -30,7 +28,7 @@ const LogDetailPage = () => {
     setError(null);
     const timer = setTimeout(() => {
       const logId = parseInt(id, 10);
-      const foundLog = getLogsFromStorage().find(p => p.id === logId);
+      const foundLog = loadStoredLogs().find(p => p.id === logId);
       if (foundLog) {
         setLog(foundLog);
       } else {
@@ -44,7 +42,7 @@ const LogDetailPage = () => {
   const handleDelete = () => {
     if (window.confirm('정말로 이 기록을 삭제하시겠습니까? (되돌릴 수 없음)')) {
       const logId = parseInt(id, 10);
-      const nextLogs = getLogsFromStorage().filter(p => p.id !== logId);
+      const nextLogs = loadStoredLogs().filter(p => p.id !== logId);
       saveLogsToStorage(nextLogs);
       toast.success('기록을 삭제했습니다.');
       navigate('/');
