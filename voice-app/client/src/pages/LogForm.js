@@ -6,12 +6,15 @@ import toast from 'react-hot-toast';
 import { ensureMockData, STORAGE_KEY } from '../mockData';
 import { dispatchLogsUpdated } from '../utils/logStats';
 
+// 로컬스토리지 접근을 담당하는 유틸 함수
 const getLogsFromStorage = () => {
+  // ensureMockData를 통해 항상 배열 형태의 로그 데이터를 얻는다.
   const { logs } = ensureMockData();
   return Array.isArray(logs) ? logs : [];
 };
 
 const saveLogsToStorage = (logs) => {
+  // 저장 후 커스텀 이벤트를 발행해 헤더 통계나 다른 탭이 즉시 갱신되도록 한다.
   if (typeof window === 'undefined' || !window.localStorage) return;
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
@@ -20,6 +23,7 @@ const saveLogsToStorage = (logs) => {
 };
 
 const LogForm = () => {
+  // 새 로그 작성과 기존 로그 수정을 모두 처리하며 음성 입력 기능을 포함한다.
   const [content, setContent] = useState('');
   const [logDate, setLogDate] = useState(moment().format('YYYY-MM-DD'));
   const [isLoading, setIsLoading] = useState(false);
@@ -39,6 +43,7 @@ const LogForm = () => {
   const offlineStt = isNative ? window.Capacitor?.Plugins?.OfflineStt : null;
 
   const stopRecognition = () => {
+    // 네이티브 플러그인과 브라우저 SpeechRecognition 모두 안전하게 종료한다.
     if (offlineStt && isListening) {
       try { offlineStt.stop(); } catch (_) {}
     }
@@ -54,6 +59,7 @@ const LogForm = () => {
   };
 
   const startRecognition = async () => {
+    // 가능한 경우 오프라인 STT 플러그인을 우선 사용하고, 실패하면 웹 Speech API를 사용한다.
     if (isListening) {
       stopRecognition();
       return;
@@ -63,6 +69,7 @@ const LogForm = () => {
       try {
         finalTranscriptRef.current = content;
         sttListenerRef.current = await offlineStt.addListener('sttResult', ({ text, isFinal }) => {
+          // 플러그인이 전달하는 중간/최종 결과를 합칠 때 중복 단어가 생기지 않도록 관리한다.
           if (typeof text !== 'string') return;
           const chunk = String(text).trim();
           if (isFinal) {
@@ -98,6 +105,7 @@ const LogForm = () => {
     }
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    // 브라우저에서만 제공되는 기능이므로 미지원 환경에서는 오류 토스트를 보여준다.
     if (!SpeechRecognition) {
       toast.error('이 환경에서는 음성 인식이 지원되지 않습니다.');
       return;
@@ -115,6 +123,7 @@ const LogForm = () => {
     };
 
     recognition.onresult = (event) => {
+      // 이벤트 버퍼에 담긴 결과를 순회하면서 최종/중간 본문을 각각 누적한다.
       let interimTranscript = '';
       let finalTranscript = finalTranscriptRef.current;
       for (let i = event.resultIndex; i < event.results.length; ++i) {
@@ -139,6 +148,7 @@ const LogForm = () => {
     };
 
     recognition.onerror = (event) => {
+      // 마이크 권한 거부 등 오류 메시지를 사용자에게 안내하고 인식을 중단한다.
       toast.error(`음성 인식 오류: ${event.error}`);
       stopRecognition();
     };
@@ -151,6 +161,7 @@ const LogForm = () => {
   };
 
   useEffect(() => {
+    // 수정 모드라면 기존 로그 내용을 불러오고, 새 작성이라면 선택한 날짜를 기본값으로 사용한다.
     if (isEditing) {
       setIsFetching(true);
       const allLogs = getLogsFromStorage();
@@ -170,6 +181,7 @@ const LogForm = () => {
   }, [isEditing, id, location.state]);
 
   const handleSubmit = (e) => {
+    // 폼 제출 시 음성 인식을 끝내고 신규/수정 여부에 따라 로그 배열을 갱신한다.
     e.preventDefault();
     stopRecognition();
     setIsLoading(true);

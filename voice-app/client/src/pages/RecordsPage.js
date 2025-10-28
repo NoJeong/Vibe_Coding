@@ -6,7 +6,9 @@ import 'moment/locale/ko';
 
 import { LOGS_PER_PAGE, ensureMockData, SAVED_KEYWORDS_KEY, STORAGE_KEY } from '../mockData';
 
+// 로컬스토리지에서 읽어 온 값을 화면에서 처리하기 쉬운 구조로 변환하는 보조 함수들
 const safeParseLogs = (source) => {
+  // JSON 문자열이거나 배열일 수 있는 입력을 안전하게 파싱해 일관된 객체 배열로 만든다.
   if (!source) return [];
   try {
     const parsed = Array.isArray(source) ? source : JSON.parse(source);
@@ -20,22 +22,26 @@ const safeParseLogs = (source) => {
 };
 
 const getLogsFromStorage = () => {
+  // ensureMockData가 비정상 데이터를 정리해 주기 때문에 여기서는 결과만 받아온다.
   const { logs } = ensureMockData();
   return safeParseLogs(logs);
 };
 
 const readSavedKeywords = () => {
+  // 비어 있거나 손상된 값이 들어 있어도 깨끗한 문자열 배열로 정리한다.
   const { keywords } = ensureMockData();
   return Array.isArray(keywords) ? keywords.filter(Boolean) : [];
 };
 
 const highlight = (text, keyword) => {
+  // 검색어가 있을 경우 미리보기 본문에서 해당 문자열을 <mark> 태그로 감싸 강조한다.
   if (!keyword) return text;
   const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const regex = new RegExp(`(${escaped})`, 'gi');
   return text.replace(regex, '<mark>$1</mark>');
 };
 
+// 저장된 음성 기록을 검색/필터링하고 세부 페이지로 이동할 수 있는 메인 목록 화면
 const RecordsPage = () => {
   const navigate = useNavigate();
   const [rawLogs, setRawLogs] = useState([]);
@@ -46,10 +52,12 @@ const RecordsPage = () => {
   const [selectedKeywords, setSelectedKeywords] = useState([]);
 
   useEffect(() => {
+    // 모든 날짜 표기를 한국어 로캘에 맞춰 보여주기 위해 초기화한다.
     moment.locale('ko');
   }, []);
 
   useEffect(() => {
+    // 로딩 스피너가 잠깐이라도 보이도록 지연을 둔 뒤 스토리지에서 값을 읽어온다.
     setLoading(true);
     const timer = window.setTimeout(() => {
       setRawLogs(getLogsFromStorage());
@@ -60,6 +68,7 @@ const RecordsPage = () => {
   }, []);
 
   useEffect(() => {
+    // 다른 탭이나 창에서 기록이 변경될 때 storage 이벤트로 최신 상태를 유지한다.
     const onStorage = (e) => {
       if (!e.key || e.key === STORAGE_KEY) setRawLogs(getLogsFromStorage());
       if (!e.key || e.key === SAVED_KEYWORDS_KEY) setSavedKeywords(readSavedKeywords());
@@ -68,6 +77,7 @@ const RecordsPage = () => {
     return () => window.removeEventListener('storage', onStorage);
   }, []);
 
+  // 최신 기록이 위로 오도록 정렬된 배열을 메모이즈해 불필요한 재계산을 줄인다.
   const sortedLogs = useMemo(
     () => [...rawLogs].filter((l) => l.created_at).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)),
     [rawLogs]
@@ -80,6 +90,7 @@ const RecordsPage = () => {
     return matches.map((s) => s.slice(1).toLowerCase());
   }, [trimmedSearch]);
 
+  // 검색어와 선택된 키워드 조건을 모두 반영한 결과만 필터링한다.
   const filteredLogs = useMemo(() => {
     return sortedLogs.filter((log) => {
       const content = (log.content || '').toString();
@@ -99,6 +110,7 @@ const RecordsPage = () => {
   }, [sortedLogs, normalizedSearch, selectedKeywords, searchKeywordTokens]);
 
   useEffect(() => {
+    // 검색 조건이 바뀔 때마다 페이지네이션을 처음부터 다시 보여준다.
     setVisibleCount(LOGS_PER_PAGE);
   }, [trimmedSearch, sortedLogs.length, selectedKeywords.join('|')]);
 
@@ -106,6 +118,7 @@ const RecordsPage = () => {
   const hasMore = visibleCount < filteredLogs.length;
 
   const handleRefresh = () => {
+    // 사용자가 직접 새로고침을 눌렀을 때 스토리지를 다시 읽어온다.
     setLoading(true);
     window.setTimeout(() => {
       setRawLogs(getLogsFromStorage());
@@ -115,6 +128,7 @@ const RecordsPage = () => {
   };
 
   const renderPreview = (log) => {
+    // 미리보기 본문을 220자까지 표시하되 검색어는 하이라이트한다.
     const content = (log.content || '').toString();
     const preview = content.length > 220 ? `${content.slice(0, 220)}…` : content;
     if (!trimmedSearch) return preview;
@@ -122,6 +136,7 @@ const RecordsPage = () => {
   };
 
   const toggleKeyword = (k) => {
+    // 저장된 키워드 버튼을 누르면 선택 목록에 추가하거나 제거한다.
     setSelectedKeywords((prev) => (prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k]));
   };
 

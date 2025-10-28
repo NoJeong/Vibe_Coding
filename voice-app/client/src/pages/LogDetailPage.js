@@ -6,6 +6,7 @@ import { getLogsFromStorage as loadStoredLogs, dispatchLogsUpdated } from '../ut
 import { STORAGE_KEY } from '../mockData';
 
 const saveLogsToStorage = (logs) => {
+  // 삭제나 수정 이후 로컬스토리지에 즉시 반영하고 커스텀 이벤트로 헤더를 갱신한다.
   if (typeof window === "undefined" || !window.localStorage) return;
   try {
     const safeLogs = Array.isArray(logs) ? logs : [];
@@ -17,6 +18,7 @@ const saveLogsToStorage = (logs) => {
 };
 
 const LogDetailPage = () => {
+  // 단일 로그의 본문을 보여주고 수정/삭제를 수행할 수 있는 상세 화면.
   const [log, setLog] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -24,6 +26,7 @@ const LogDetailPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // 짧은 지연을 주어 로딩 스피너가 표시되도록 한 뒤 스토리지에서 데이터를 읽는다.
     setLoading(true);
     setError(null);
     const timer = setTimeout(() => {
@@ -40,6 +43,7 @@ const LogDetailPage = () => {
   }, [id]);
 
   const handleDelete = () => {
+    // 사용자가 실수로 삭제하는 것을 막기 위해 확인 대화상자를 먼저 띄운다.
     if (window.confirm('정말로 이 기록을 삭제하시겠습니까? (되돌릴 수 없음)')) {
       const logId = parseInt(id, 10);
       const nextLogs = loadStoredLogs().filter(p => p.id !== logId);

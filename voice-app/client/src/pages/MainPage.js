@@ -6,7 +6,9 @@ import { ensureMockData, SAVED_KEYWORDS_KEY, STORAGE_KEY } from '../mockData';
 import 'moment/locale/ko';
 import 'react-calendar/dist/Calendar.css';
 
+// 로컬스토리지에서 읽어 온 값을 정리하는 보조 함수
 const safeParseLogs = (source) => {
+  // JSON 문자열이거나 배열일 수 있는 입력을 안전하게 파싱해 일관된 구조를 만든다.
   if (!source) return [];
   try {
     const parsed = Array.isArray(source) ? source : JSON.parse(source);
@@ -25,11 +27,13 @@ const getLogsFromStorage = () => {
 };
 
 const readSavedKeywords = () => {
+  // 저장된 키워드가 없을 때도 빈 배열을 돌려 오류를 방지한다.
   const { keywords } = ensureMockData();
   return Array.isArray(keywords) ? keywords.filter(Boolean) : [];
 };
 
 const writeSavedKeywords = (list) => {
+  // 입력값을 정제한 뒤 최대 5개까지만 저장하며, 중복을 제거한다.
   try {
     const unique = Array.from(new Set((list || []).map((s) => String(s).trim()).filter(Boolean)));
     window.localStorage.setItem(SAVED_KEYWORDS_KEY, JSON.stringify(unique.slice(0, 5)));
@@ -37,16 +41,19 @@ const writeSavedKeywords = (list) => {
 };
 
 const MainPage = () => {
+  // 달력과 키워드 위젯을 통해 최근 기록 현황을 한눈에 보여주는 홈 화면.
   const [rawLogs, setRawLogs] = useState([]);
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [savedKeywords, setSavedKeywords] = useState([]);
   const [savedKeywordInput, setSavedKeywordInput] = useState('');
 
   useEffect(() => {
+    // 날짜와 요일을 한국어로 표기하기 위해 모멘트 로캘을 설정한다.
     moment.locale('ko');
   }, []);
 
   useEffect(() => {
+    // 첫 렌더 직후 setTimeout을 사용해 스토리지 I/O가 렌더를 막지 않도록 한다.
     const timer = window.setTimeout(() => {
       setRawLogs(getLogsFromStorage());
       setSavedKeywords(readSavedKeywords());
@@ -55,6 +62,7 @@ const MainPage = () => {
   }, []);
 
   useEffect(() => {
+    // 다른 탭에서 로그가 수정될 때 storage 이벤트로 동기화한다.
     const onStorage = (e) => {
       if (!e.key || e.key === STORAGE_KEY) setRawLogs(getLogsFromStorage());
       if (!e.key || e.key === SAVED_KEYWORDS_KEY) setSavedKeywords(readSavedKeywords());
@@ -63,6 +71,7 @@ const MainPage = () => {
     return () => window.removeEventListener('storage', onStorage);
   }, []);
 
+  // 최신 작성 순으로 정렬된 로그 목록을 재사용하기 위해 메모이즈한다.
   const sortedLogs = useMemo(
     () => [...rawLogs].filter((l) => l.created_at).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)),
     [rawLogs]
@@ -70,6 +79,7 @@ const MainPage = () => {
   const lastLogMoment = useMemo(() => (sortedLogs[0] ? moment(sortedLogs[0].created_at) : null), [sortedLogs]);
 
 
+  // 키워드가 등장한 날짜를 미리 계산해 달력 타일에 마커를 붙인다.
   const savedKeywordHitsByDate = useMemo(() => {
     if (!savedKeywords || !savedKeywords.length) return {};
     const setMap = {};
@@ -95,6 +105,7 @@ const MainPage = () => {
   }, [sortedLogs, savedKeywords]);
 
   const addSavedKeyword = () => {
+    // 입력한 키워드를 중복 없이 저장하고 UI를 즉시 갱신한다.
     const k = savedKeywordInput.trim();
     if (!k) return;
     if ((savedKeywords || []).includes(k)) {
@@ -109,6 +120,7 @@ const MainPage = () => {
   };
 
   const removeSavedKeyword = (k) => {
+    // 삭제된 키워드를 로컬스토리지와 상태에서 모두 제거해 일관성을 유지한다.
     const next = (savedKeywords || []).filter((x) => x !== k);
     setSavedKeywords(next);
     writeSavedKeywords(next);
