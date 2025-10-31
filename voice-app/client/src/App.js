@@ -7,6 +7,7 @@ import MainPage from './pages/MainPage';
 import RecordsPage from './pages/RecordsPage';
 import LogDetailPage from './pages/LogDetailPage';
 import LogForm from './pages/LogForm';
+import NotificationSettingsPage from './pages/NotificationSettingsPage';
 import './index.css';
 
 function App() {
@@ -88,6 +89,7 @@ function App() {
             <Route path="/logs/:id" element={<LogDetailPage />} />
             <Route path="/new-log" element={<LogForm />} />
             <Route path="/edit-log/:id" element={<LogForm />} />
+            <Route path="/settings/notifications" element={<NotificationSettingsPage />} />
           </Routes>
         </Container>
       </main>

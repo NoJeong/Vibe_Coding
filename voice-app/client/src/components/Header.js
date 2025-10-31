@@ -1,18 +1,41 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Navbar, Nav, Container } from "react-bootstrap";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Navbar, Nav, Container, Button } from "react-bootstrap";
 import { Link, useLocation } from "react-router-dom";
 import { calculateLogStats, getLogsFromStorage, LOGS_UPDATED_EVENT } from "../utils/logStats";
+
+const THEME_STORAGE_KEY = "voice-app-theme";
+const THEMES = [
+  { value: "spring", label: "봄" },
+  { value: "summer", label: "여름" },
+  { value: "autumn", label: "가을" },
+  { value: "winter", label: "겨울" },
+];
 
 const Header = () => {
   const [expanded, setExpanded] = useState(false);
   const [logStats, setLogStats] = useState(() => calculateLogStats(getLogsFromStorage()));
+  const [theme, setTheme] = useState(() => {
+    if (typeof window === "undefined") return "light";
+    try {
+      return window.localStorage.getItem(THEME_STORAGE_KEY) || "light";
+    } catch (_) {
+      return "light";
+    }
+  });
   const collapseRef = useRef(null);
   const toggleRef = useRef(null);
   const location = useLocation();
 
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", "light");
-  }, []);
+    document.documentElement.setAttribute("data-theme", theme);
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+      } catch (_) {
+        /* ignore */
+      }
+    }
+  }, [theme]);
 
   useEffect(() => {
     if (!expanded) return;
@@ -60,6 +83,11 @@ const Header = () => {
   const toggleNavbar = () => {
     setExpanded((prev) => !prev);
   };
+
+  const currentThemeLabel = useMemo(() => {
+    const found = THEMES.find((item) => item.value === theme);
+    return found ? found.label : "라이트";
+  }, [theme]);
 
   const renderStats = (extraClass = "") => {
     const items = [
@@ -124,13 +152,25 @@ const Header = () => {
               음성 기록
             </Nav.Link>
             <Nav.Link
-              className="ms-3 text-muted py-0 my-0"
-              role="button"
-              title="테마 변경"
-              style={{ pointerEvents: "none" }}
+              as={Link}
+              to="/settings/notifications"
+              className="ms-3 fw-bold fs-6 text-decoration-none py-0 my-0"
+              onClick={() => setExpanded(false)}
             >
-              테마: light
+              알림 설정
             </Nav.Link>
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              className="ms-3"
+              onClick={() => {
+                const currentIndex = THEMES.findIndex((item) => item.value === theme);
+                const nextIndex = (currentIndex + 1) % THEMES.length;
+                setTheme(THEMES[nextIndex].value);
+              }}
+            >
+              테마: {currentThemeLabel}
+            </Button>
           </Nav>
         </Navbar.Collapse>
       </Container>

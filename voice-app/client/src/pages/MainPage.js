@@ -1,10 +1,11 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
-import { Button, Card, Col, Form, Row, Stack } from 'react-bootstrap';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Button, Card, Col, Form, ListGroup, Modal, Row, Stack } from 'react-bootstrap';
 import Calendar from 'react-calendar';
 import moment from 'moment';
 import { ensureMockData, SAVED_KEYWORDS_KEY, STORAGE_KEY } from '../mockData';
 import 'moment/locale/ko';
 import 'react-calendar/dist/Calendar.css';
+import { useNavigate } from 'react-router-dom';
 
 // 로컬스토리지에서 읽어 온 값을 정리하는 보조 함수
 const safeParseLogs = (source) => {
@@ -46,6 +47,11 @@ const MainPage = () => {
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [savedKeywords, setSavedKeywords] = useState([]);
   const [savedKeywordInput, setSavedKeywordInput] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [modalDate, setModalDate] = useState(null);
+  const [modalLogs, setModalLogs] = useState([]);
+  const lastClickRef = useRef({ dateKey: null, time: 0 });
+  const navigate = useNavigate();
 
   useEffect(() => {
     // 날짜와 요일을 한국어로 표기하기 위해 모멘트 로캘을 설정한다.
@@ -126,96 +132,174 @@ const MainPage = () => {
     writeSavedKeywords(next);
   };
 
+  const openLogsModal = (date) => {
+    const key = moment(date).format('YYYY-MM-DD');
+    const logsForDate = sortedLogs.filter(
+      (log) => moment(log.created_at).format('YYYY-MM-DD') === key
+    );
+    setModalDate(date);
+    setModalLogs(logsForDate);
+    setShowModal(true);
+  };
+
+  const closeLogsModal = () => {
+    setShowModal(false);
+    setModalDate(null);
+    setModalLogs([]);
+  };
+
+  const handleDayClick = (value) => {
+    const date = Array.isArray(value) ? value[0] : value;
+    const key = moment(date).format('YYYY-MM-DD');
+    const now = Date.now();
+    const { dateKey, time } = lastClickRef.current;
+    if (dateKey === key && now - time < 500) {
+      openLogsModal(date);
+    }
+    lastClickRef.current = { dateKey: key, time: now };
+  };
+
   return (
-    <Row className="gy-4">
-      <Col lg={4}>
-        <Stack gap={3}>
-          <Card className="shadow-sm border-0">
-            <Card.Body>
-              <div className="d-flex justify-content-between align-items-center mb-2">
-                <Card.Title as="h2" className="h5 mb-0">기록 달력</Card.Title>
-              </div>
-              <div className="mt-2 small text-muted">
-                {lastLogMoment ? (
-                  <span>최근 기록: {lastLogMoment.format('YYYY년 M월 D일 HH:mm')}</span>
-                ) : (
-                  <span>아직 생성된 기록이 없습니다.</span>
-                )}
-              </div>
-
-              <div className="saved-keyword-row mb-2">
-                <div className="saved-keyword-controls">
-                  <Form.Control
-                    type="text"
-                    value={savedKeywordInput}
-                    onChange={(e) => setSavedKeywordInput(e.target.value)}
-                    placeholder="저장할 키워드 입력 (최대 5개)"
-                    className="saved-keyword-input"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ',') {
-                        e.preventDefault();
-                        addSavedKeyword();
-                      }
-                    }}
-                  />
-                  <Button
-                    variant="outline-secondary"
-                    size="sm"
-                    disabled={!savedKeywordInput.trim() || (savedKeywords?.length || 0) >= 5}
-                    onClick={addSavedKeyword}
-                  >
-                    추가 ({(savedKeywords?.length || 0)}/5)
-                  </Button>
+    <>
+      <Row className="gy-4">
+        <Col lg={4}>
+          <Stack gap={3}>
+            <Card className="shadow-sm border-0">
+              <Card.Body>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <Card.Title as="h2" className="h5 mb-0">기록 달력</Card.Title>
                 </div>
-                <div className="saved-keyword-tags">
-                  {savedKeywords && savedKeywords.length > 0 && savedKeywords.map((k) => (
-                    <div key={k} className="d-inline-flex align-items-center gap-1">
-                      <Button variant="outline-secondary" size="sm" onClick={() => removeSavedKeyword(k)} title="삭제">
-                        {k} ×
-                      </Button>
-                    </div>
-                  ))}
+                <div className="mt-2 small text-muted">
+                  {lastLogMoment ? (
+                    <span>최근 기록: {lastLogMoment.format('YYYY년 M월 D일 HH:mm')}</span>
+                  ) : (
+                    <span>아직 생성된 기록이 없습니다.</span>
+                  )}
                 </div>
-              </div>
 
-              <Calendar
-                calendarType="gregory"
-                className="voice-calendar"
-                locale="ko"
-                value={selectedDate}
-                onChange={(value) => setSelectedDate(Array.isArray(value) ? value[0] : value)}
-                tileClassName={({ date, view }) => {
-                  if (view !== 'month') return null;
-                  const key = moment(date).format('YYYY-MM-DD');
-                  const classes = [];
-                  if ((savedKeywordHitsByDate[key] || []).length) classes.push('has-search-keyword');
-                  return classes.join(' ');
-                }}
-                tileContent={({ date, view }) => {
-                  if (view !== 'month') return null;
-                  const key = moment(date).format('YYYY-MM-DD');
-                  const kws = savedKeywordHitsByDate[key] || [];
-                  if (!kws.length) return null;
-                  const display = kws.slice(0, 5);
-                  const more = kws.length - display.length;
-                  return (
-                    <div className="log-keywords" style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 2 }}>
-                      {display.map((k) => (
-                        <span key={k} className="keyword-tag">{k}</span>
-                      ))}
-                      {more > 0 && <span className="keyword-tag">+{more}</span>}
-                    </div>
-                  );
-                }}
-              />
-              <div className="mt-3 small text-muted">
-                선택한 날짜: {moment(selectedDate).format('YYYY년 M월 D일 (ddd)')}
-              </div>
-            </Card.Body>
-          </Card>
-        </Stack>
-      </Col>
-    </Row>
+                <div className="saved-keyword-row mb-2">
+                  <div className="saved-keyword-controls">
+                    <Form.Control
+                      type="text"
+                      value={savedKeywordInput}
+                      onChange={(e) => setSavedKeywordInput(e.target.value)}
+                      placeholder="저장할 키워드 입력 (최대 5개)"
+                      className="saved-keyword-input"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ',') {
+                          e.preventDefault();
+                          addSavedKeyword();
+                        }
+                      }}
+                    />
+                    <Button
+                      variant="outline-secondary"
+                      size="sm"
+                      disabled={!savedKeywordInput.trim() || (savedKeywords?.length || 0) >= 5}
+                      onClick={addSavedKeyword}
+                    >
+                      추가 ({(savedKeywords?.length || 0)}/5)
+                    </Button>
+                  </div>
+                  <div className="saved-keyword-tags">
+                    {savedKeywords && savedKeywords.length > 0 && savedKeywords.map((k) => (
+                      <div key={k} className="d-inline-flex align-items-center gap-1">
+                        <Button variant="outline-secondary" size="sm" onClick={() => removeSavedKeyword(k)} title="삭제">
+                          {k} ×
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <Calendar
+                  calendarType="gregory"
+                  className="voice-calendar"
+                  locale="ko"
+                  value={selectedDate}
+                  onChange={(value) => setSelectedDate(Array.isArray(value) ? value[0] : value)}
+                  onClickDay={handleDayClick}
+                  tileClassName={({ date, view }) => {
+                    if (view !== 'month') return null;
+                    const key = moment(date).format('YYYY-MM-DD');
+                    const classes = [];
+                    if ((savedKeywordHitsByDate[key] || []).length) classes.push('has-search-keyword');
+                    return classes.join(' ');
+                  }}
+                  tileContent={({ date, view }) => {
+                    if (view !== 'month') return null;
+                    const key = moment(date).format('YYYY-MM-DD');
+                    const kws = savedKeywordHitsByDate[key] || [];
+                    if (!kws.length) return null;
+                    const display = kws.slice(0, 5);
+                    const more = kws.length - display.length;
+                    return (
+                      <div className="log-keywords" style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 2 }}>
+                        {display.map((k) => (
+                          <span key={k} className="keyword-tag">{k}</span>
+                        ))}
+                        {more > 0 && <span className="keyword-tag">+{more}</span>}
+                      </div>
+                    );
+                  }}
+                />
+                <div className="mt-3 small text-muted">
+                  선택한 날짜: {moment(selectedDate).format('YYYY년 M월 D일 (ddd)')}
+                </div>
+              </Card.Body>
+            </Card>
+          </Stack>
+        </Col>
+      </Row>
+      <Modal show={showModal} onHide={closeLogsModal} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>
+            {modalDate ? moment(modalDate).format('YYYY년 M월 D일 dddd') : '기록'}
+          </Modal.Title>
+        </Modal.Header>
+      <Modal.Body>
+        {modalLogs.length ? (
+          <ListGroup variant="flush">
+            {modalLogs.map((log) => (
+              <ListGroup.Item key={log.id ?? log.created_at}>
+                <div className="d-flex justify-content-between align-items-start gap-2 mb-1">
+                  <span className="fw-semibold text-primary">
+                    {moment(log.created_at).format('HH:mm')}
+                  </span>
+                  <span className="ms-auto text-muted small">
+                    {moment(log.created_at).format('YYYY.MM.DD')}
+                  </span>
+                </div>
+                <div style={{ whiteSpace: 'pre-wrap' }}>{log.content}</div>
+                {Array.isArray(log.keywords) && log.keywords.length ? (
+                  <div className="mt-2 d-flex flex-wrap gap-1">
+                    {log.keywords.map((keyword) => (
+                      <span key={keyword} className="badge bg-secondary">{keyword}</span>
+                    ))}
+                  </div>
+                ) : null}
+              </ListGroup.Item>
+            ))}
+          </ListGroup>
+        ) : (
+          <p className="mb-0 text-muted text-center">이 날짜에는 저장된 기록이 없습니다.</p>
+        )}
+      </Modal.Body>
+      <Modal.Footer>
+        <Button
+          variant="primary"
+          onClick={() => {
+            if (!modalDate) return;
+            closeLogsModal();
+            navigate('/new-log', { state: { selectedDate: modalDate } });
+          }}
+          disabled={!modalDate}
+        >
+          추가하기
+        </Button>
+      </Modal.Footer>
+    </Modal>
+    </>
   );
 };
 

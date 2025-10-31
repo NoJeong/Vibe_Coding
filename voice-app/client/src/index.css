@@ -1,4 +1,4 @@
-/* Theme variables */
+﻿/* Theme variables */
 :root {
   --bg: #F7F9FC;
   --text: #333333;
@@ -91,6 +91,98 @@
   --secondary-bg: #2B2B2B;
   --secondary-bg-hover: #353535;
   --secondary-text: #FFFFFF;
+}
+
+[data-theme='spring'] {
+  --bg: #F7FFF3;
+  --text: #2A3D27;
+  --surface: #FFFFFF;
+  --border: #D8F1D0;
+  --primary: #89D86F;
+  --primary-hover: #6EC356;
+  --calendar-day-log: #E7F9D9;
+  --calendar-day-keyword: #D9F6C7;
+  --calendar-day-search: #F1FCEB;
+  --calendar-hover: #DBF6C9;
+  --calendar-active: #C8EEB5;
+  --calendar-active-border: #AEE496;
+  --calendar-today: #E4F7D3;
+  --calendar-today-border: #BDE59F;
+  --keyword-tag-bg: #FFFFFF;
+  --keyword-tag-border: #CDECC2;
+  --keyword-tag-text: #2F4A26;
+  --secondary-bg: #E0F6CF;
+  --secondary-bg-hover: #C9EDB2;
+  --secondary-text: #2A3D27;
+}
+
+[data-theme='summer'] {
+  --bg: #F2FBFF;
+  --text: #1F3E4F;
+  --surface: #FFFFFF;
+  --border: #D4E9F2;
+  --primary: #4DC7E8;
+  --primary-hover: #36AFD1;
+  --calendar-day-log: #DFF4FB;
+  --calendar-day-keyword: #C9F2EA;
+  --calendar-day-search: #F2F9FF;
+  --calendar-hover: #DAF0FF;
+  --calendar-active: #C8E7FF;
+  --calendar-active-border: #A8D8F6;
+  --calendar-today: #E6F5FF;
+  --calendar-today-border: #BBDCF7;
+  --keyword-tag-bg: #FFFFFF;
+  --keyword-tag-border: #CFE6F1;
+  --keyword-tag-text: #24536A;
+  --secondary-bg: #D4F2FF;
+  --secondary-bg-hover: #BFE8FC;
+  --secondary-text: #1F3E4F;
+}
+
+[data-theme='autumn'] {
+  --bg: #FFF6EB;
+  --text: #3E2A1C;
+  --surface: #FFFFFF;
+  --border: #F0D7C2;
+  --primary: #E8893C;
+  --primary-hover: #D77222;
+  --calendar-day-log: #FFE6CC;
+  --calendar-day-keyword: #F8D9BA;
+  --calendar-day-search: #FFEFE0;
+  --calendar-hover: #FDD9B8;
+  --calendar-active: #F9CBA2;
+  --calendar-active-border: #F0B580;
+  --calendar-today: #FFE2C4;
+  --calendar-today-border: #F4BE8A;
+  --keyword-tag-bg: #FFFFFF;
+  --keyword-tag-border: #E8C7A8;
+  --keyword-tag-text: #4A2F1C;
+  --secondary-bg: #F4D3B5;
+  --secondary-bg-hover: #ECB888;
+  --secondary-text: #3E2A1C;
+}
+
+[data-theme='winter'] {
+  --bg: #F7FBFF; /* snowy blue-white */
+  --text: #2E3A32;
+  --surface: #FFFFFF;
+  --border: #DCE6F1;
+  --primary: #FF6B6B; /* warm red accent */
+  --primary-hover: #E05656;
+  --calendar-day-log: #F4FAFF;
+  --calendar-day-keyword: #EAF4FF;
+  --calendar-day-search: #FFF7F7;
+  --calendar-hover: #E7F1FF;
+  --calendar-active: #DFE9FF;
+  --calendar-active-border: #C9D8F2;
+  --calendar-today: #FAFDFE;
+  --calendar-today-border: #DCE7F5;
+  --keyword-tag-bg: #FFFFFF;
+  --keyword-tag-border: #D7E5ED;
+  --keyword-tag-text: #2F4037;
+  --secondary-bg: #D3E9DA; /* soft evergreen highlight */
+  --secondary-bg-hover: #BDDCC6;
+  --secondary-text: #2E3A32;
 }
 
 /* Serene Dusk Theme */
@@ -516,10 +608,10 @@ body {
     width: 100%;
   }
   .header-navbar .navbar-collapse:not(.show) {
-    display: none;
+    display: none !important;
   }
   .header-navbar .navbar-collapse.show {
-    display: flex;
+    display: flex !important;
     flex-direction: column;
     align-items: center;
     justify-content: center;
