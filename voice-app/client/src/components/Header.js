@@ -11,15 +11,19 @@ const THEMES = [
   { value: "winter", label: "겨울" },
 ];
 
+const DEFAULT_THEME = THEMES[0].value;
+
 const Header = () => {
   const [expanded, setExpanded] = useState(false);
   const [logStats, setLogStats] = useState(() => calculateLogStats(getLogsFromStorage()));
   const [theme, setTheme] = useState(() => {
-    if (typeof window === "undefined") return "light";
+    if (typeof window === "undefined") return DEFAULT_THEME;
     try {
-      return window.localStorage.getItem(THEME_STORAGE_KEY) || "light";
+      const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
+      if (stored && THEMES.some((item) => item.value === stored)) return stored;
+      return DEFAULT_THEME;
     } catch (_) {
-      return "light";
+      return DEFAULT_THEME;
     }
   });
   const collapseRef = useRef(null);
@@ -86,7 +90,7 @@ const Header = () => {
 
   const currentThemeLabel = useMemo(() => {
     const found = THEMES.find((item) => item.value === theme);
-    return found ? found.label : "라이트";
+    return found ? found.label : THEMES[0].label;
   }, [theme]);
 
   const renderStats = (extraClass = "") => {
