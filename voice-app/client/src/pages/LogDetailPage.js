@@ -6,19 +6,19 @@ import { getLogsFromStorage as loadStoredLogs, dispatchLogsUpdated } from '../ut
 import { STORAGE_KEY } from '../mockData';
 
 const saveLogsToStorage = (logs) => {
-  // 삭제나 수정 이후 로컬스토리지에 즉시 반영하고 커스텀 이벤트로 헤더를 갱신한다.
-  if (typeof window === "undefined" || !window.localStorage) return;
+  // 현재 목록을 안전하게 저장하고 전역 이벤트를 발행해 다른 화면도 갱신한다.
+  if (typeof window === 'undefined' || !window.localStorage) return;
   try {
     const safeLogs = Array.isArray(logs) ? logs : [];
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(safeLogs));
     dispatchLogsUpdated();
   } catch (_) {
-    // ignore storage errors
+    // 저장 실패는 사용자에게 노출하지 않는다.
   }
 };
 
 const LogDetailPage = () => {
-  // 단일 로그의 본문을 보여주고 수정/삭제를 수행할 수 있는 상세 화면.
+  // 단일 로그의 본문을 보여주고 수정/삭제를 실행할 수 있는 상세 화면.
   const [log, setLog] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -26,12 +26,12 @@ const LogDetailPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // 짧은 지연을 주어 로딩 스피너가 표시되도록 한 뒤 스토리지에서 데이터를 읽는다.
+    // 짧은 지연을 준 뒤 로컬스토리지에서 해당 ID의 로그를 찾아 표시한다.
     setLoading(true);
     setError(null);
-    const timer = setTimeout(() => {
+    const timer = window.setTimeout(() => {
       const logId = parseInt(id, 10);
-      const foundLog = loadStoredLogs().find(p => p.id === logId);
+      const foundLog = loadStoredLogs().find((entry) => entry.id === logId);
       if (foundLog) {
         setLog(foundLog);
       } else {
@@ -39,18 +39,17 @@ const LogDetailPage = () => {
       }
       setLoading(false);
     }, 150);
-    return () => clearTimeout(timer);
+    return () => window.clearTimeout(timer);
   }, [id]);
 
   const handleDelete = () => {
-    // 사용자가 실수로 삭제하는 것을 막기 위해 확인 대화상자를 먼저 띄운다.
-    if (window.confirm('정말로 이 기록을 삭제하시겠습니까? (되돌릴 수 없음)')) {
-      const logId = parseInt(id, 10);
-      const nextLogs = loadStoredLogs().filter(p => p.id !== logId);
-      saveLogsToStorage(nextLogs);
-      toast.success('기록을 삭제했습니다.');
-      navigate('/');
-    }
+    // 사용자가 실수로 삭제하지 않도록 확인 대화 상자를 먼저 띄운다.
+    if (!window.confirm('정말로 이 기록을 삭제하시겠습니까? (되돌릴 수 없습니다)')) return;
+    const logId = parseInt(id, 10);
+    const nextLogs = loadStoredLogs().filter((entry) => entry.id !== logId);
+    saveLogsToStorage(nextLogs);
+    toast.success('기록이 삭제되었습니다.');
+    navigate('/');
   };
 
   if (loading) {
@@ -64,8 +63,8 @@ const LogDetailPage = () => {
   if (error || !log) {
     return (
       <Alert variant="danger">
-        <Alert.Heading>오류 발생!</Alert.Heading>
-        <p>{error || '기록을 찾을 수 없습니다.'}</p>
+        <Alert.Heading>오류가 발생했습니다</Alert.Heading>
+        <p>{error || '기록 정보를 불러오지 못했습니다.'}</p>
         <Button variant="secondary" onClick={() => navigate('/')}>목록으로 돌아가기</Button>
       </Alert>
     );
@@ -80,8 +79,8 @@ const LogDetailPage = () => {
         </Card.Text>
         {Array.isArray(log.keywords) && log.keywords.length ? (
           <div className="mt-2 d-flex flex-wrap gap-2">
-            {log.keywords.map((k) => (
-              <span key={k} className="badge bg-secondary">{k}</span>
+            {log.keywords.map((keyword) => (
+              <span key={keyword} className="badge bg-secondary">{keyword}</span>
             ))}
           </div>
         ) : null}

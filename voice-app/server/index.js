@@ -1,12 +1,12 @@
-require('dotenv').config(); // .env 파일의 환경 변수를 로드
-const express = require('express');
-const cors = require('cors');
-const postgres = require('postgres'); // postgres 라이브러리 import
+﻿require("dotenv").config(); // .env 파일에서 환경 변수를 로드
+const express = require("express");
+const cors = require("cors");
+const postgres = require("postgres"); // postgres 클라이언트 import
 
 const app = express();
 const port = 3001;
 
-// Supabase DB 접속 정보를 .env 파일에서 불러옵니다.
+// Supabase DB 연결 정보를 .env 파일에서 불러온다.
 const sql = postgres(process.env.DATABASE_URL);
 
 console.log('>>> VoiceLog Backend connection setup complete.');
@@ -103,7 +103,6 @@ app.delete('/api/logs/:id', async (req, res) => {
         res.status(500).send('Server error');
     }
 });
-
 
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);

@@ -84,6 +84,16 @@ const MainPage = () => {
   );
   const lastLogMoment = useMemo(() => (sortedLogs[0] ? moment(sortedLogs[0].created_at) : null), [sortedLogs]);
 
+  const logsByDate = useMemo(() => {
+    const map = {};
+    sortedLogs.forEach((log) => {
+      const key = moment(log.created_at).format('YYYY-MM-DD');
+      if (!map[key]) map[key] = [];
+      map[key].push(log);
+    });
+    return map;
+  }, [sortedLogs]);
+
 
   // 키워드가 등장한 날짜를 미리 계산해 달력 타일에 마커를 붙인다.
   const savedKeywordHitsByDate = useMemo(() => {
@@ -219,27 +229,39 @@ const MainPage = () => {
                   value={selectedDate}
                   onChange={(value) => setSelectedDate(Array.isArray(value) ? value[0] : value)}
                   onClickDay={handleDayClick}
-                  tileClassName={({ date, view }) => {
-                    if (view !== 'month') return null;
-                    const key = moment(date).format('YYYY-MM-DD');
-                    const classes = [];
-                    if ((savedKeywordHitsByDate[key] || []).length) classes.push('has-search-keyword');
-                    return classes.join(' ');
-                  }}
-                  tileContent={({ date, view }) => {
-                    if (view !== 'month') return null;
-                    const key = moment(date).format('YYYY-MM-DD');
-                    const kws = savedKeywordHitsByDate[key] || [];
-                    if (!kws.length) return null;
-                    const display = kws.slice(0, 5);
-                    const more = kws.length - display.length;
-                    return (
-                      <div className="log-keywords" style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 2 }}>
-                        {display.map((k) => (
-                          <span key={k} className="keyword-tag">{k}</span>
-                        ))}
-                        {more > 0 && <span className="keyword-tag">+{more}</span>}
-                      </div>
+                tileClassName={({ date, view }) => {
+                  if (view !== 'month') return null;
+                  const key = moment(date).format('YYYY-MM-DD');
+                  const classes = [];
+                  const logCount = (logsByDate[key] || []).length;
+                  if (logCount) {
+                    classes.push('has-log');
+                    if (logCount >= 5) {
+                      classes.push('log-level-high');
+                    } else if (logCount >= 3) {
+                      classes.push('log-level-mid');
+                    } else {
+                      classes.push('log-level-low');
+                    }
+                  }
+                  if ((savedKeywordHitsByDate[key] || []).length) classes.push('has-search-keyword');
+                  return classes.join(' ');
+                }}
+                tileContent={({ date, view }) => {
+                  if (view !== 'month') return null;
+                  const key = moment(date).format('YYYY-MM-DD');
+                  const baseLogs = logsByDate[key] || [];
+                  const kws = savedKeywordHitsByDate[key] || [];
+                  const display = kws.slice(0, 5);
+                  const more = kws.length - display.length;
+                  if (!kws.length) return null;
+                  return (
+                    <div className="log-keywords" style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 2 }}>
+                      {display.map((k) => (
+                        <span key={k} className="keyword-tag">{k}</span>
+                      ))}
+                      {more > 0 && <span className="keyword-tag">+{more}</span>}
+                    </div>
                     );
                   }}
                 />
