@@ -47,10 +47,14 @@ const MainPage = () => {
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [savedKeywords, setSavedKeywords] = useState([]);
   const [savedKeywordInput, setSavedKeywordInput] = useState('');
+  const [calendarActiveDate, setCalendarActiveDate] = useState(() => new Date());
   const [showModal, setShowModal] = useState(false);
   const [modalDate, setModalDate] = useState(null);
   const [modalLogs, setModalLogs] = useState([]);
   const lastClickRef = useRef({ dateKey: null, time: 0 });
+  const swipeStartXRef = useRef(null);
+  const slideTimeoutRef = useRef(null);
+  const [calendarSlideDir, setCalendarSlideDir] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -142,6 +146,49 @@ const MainPage = () => {
     writeSavedKeywords(next);
   };
 
+  const triggerCalendarSlide = (offset) => {
+    if (!offset) return;
+    const dir = offset > 0 ? 'next' : 'prev';
+    setCalendarSlideDir(dir);
+    if (slideTimeoutRef.current) window.clearTimeout(slideTimeoutRef.current);
+    slideTimeoutRef.current = window.setTimeout(() => {
+      setCalendarSlideDir(null);
+    }, 300);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (slideTimeoutRef.current) window.clearTimeout(slideTimeoutRef.current);
+    };
+  }, []);
+
+  const changeCalendarMonth = (offset) => {
+    setCalendarActiveDate((prev) => {
+      const next = new Date(prev);
+      next.setMonth(next.getMonth() + offset);
+      return next;
+    });
+    triggerCalendarSlide(offset);
+  };
+
+  const handleTouchStart = (event) => {
+    if (event.touches.length === 1) {
+      swipeStartXRef.current = event.touches[0].clientX;
+    }
+  };
+
+  const handleTouchEnd = (event) => {
+    if (swipeStartXRef.current == null) return;
+    const deltaX = event.changedTouches[0].clientX - swipeStartXRef.current;
+    const threshold = 50;
+    if (deltaX > threshold) {
+      changeCalendarMonth(-1);
+    } else if (deltaX < -threshold) {
+      changeCalendarMonth(1);
+    }
+    swipeStartXRef.current = null;
+  };
+
   const openLogsModal = (date) => {
     const key = moment(date).format('YYYY-MM-DD');
     const logsForDate = sortedLogs.filter(
@@ -160,6 +207,8 @@ const MainPage = () => {
 
   const handleDayClick = (value) => {
     const date = Array.isArray(value) ? value[0] : value;
+    setSelectedDate(date);
+    setCalendarActiveDate(new Date(date.getFullYear(), date.getMonth(), 1));
     const key = moment(date).format('YYYY-MM-DD');
     const now = Date.now();
     const { dateKey, time } = lastClickRef.current;
@@ -220,51 +269,85 @@ const MainPage = () => {
                       </div>
                     ))}
                   </div>
-                </div>
+              </div>
 
+              <div className="calendar-month-toolbar d-flex justify-content-between align-items-center mb-2">
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={() => changeCalendarMonth(-1)}
+                  aria-label="이전 달"
+                >
+                  ‹ 이전
+                </Button>
+                <div className="fw-semibold text-center flex-grow-1 mx-3">
+                  {moment(calendarActiveDate).format('YYYY년 M월')}
+                </div>
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={() => changeCalendarMonth(1)}
+                  aria-label="다음 달"
+                >
+                  다음 ›
+                </Button>
+              </div>
+              <div
+                className="calendar-swipe-area"
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+              >
                 <Calendar
                   calendarType="gregory"
-                  className="voice-calendar"
+                  className={`voice-calendar${calendarSlideDir ? ` calendar-animate-${calendarSlideDir}` : ''}`}
                   locale="ko"
                   value={selectedDate}
-                  onChange={(value) => setSelectedDate(Array.isArray(value) ? value[0] : value)}
+                  activeStartDate={calendarActiveDate}
+                  onChange={(value) => {
+                    const date = Array.isArray(value) ? value[0] : value;
+                    setSelectedDate(date);
+                    setCalendarActiveDate(new Date(date.getFullYear(), date.getMonth(), 1));
+                  }}
+                  onActiveStartDateChange={({ activeStartDate }) => {
+                    if (activeStartDate) setCalendarActiveDate(activeStartDate);
+                  }}
                   onClickDay={handleDayClick}
-                tileClassName={({ date, view }) => {
-                  if (view !== 'month') return null;
-                  const key = moment(date).format('YYYY-MM-DD');
-                  const classes = [];
-                  const logCount = (logsByDate[key] || []).length;
-                  if (logCount) {
-                    classes.push('has-log');
-                    if (logCount >= 5) {
-                      classes.push('log-level-high');
-                    } else if (logCount >= 3) {
-                      classes.push('log-level-mid');
-                    } else {
-                      classes.push('log-level-low');
+                  tileClassName={({ date, view }) => {
+                    if (view !== 'month') return null;
+                    const key = moment(date).format('YYYY-MM-DD');
+                    const classes = [];
+                    const logCount = (logsByDate[key] || []).length;
+                    if (logCount) {
+                      classes.push('has-log');
+                      if (logCount >= 5) {
+                        classes.push('log-level-high');
+                      } else if (logCount >= 3) {
+                        classes.push('log-level-mid');
+                      } else {
+                        classes.push('log-level-low');
+                      }
                     }
-                  }
-                  if ((savedKeywordHitsByDate[key] || []).length) classes.push('has-search-keyword');
-                  return classes.join(' ');
-                }}
-                tileContent={({ date, view }) => {
-                  if (view !== 'month') return null;
-                  const key = moment(date).format('YYYY-MM-DD');
-                  const baseLogs = logsByDate[key] || [];
-                  const kws = savedKeywordHitsByDate[key] || [];
-                  const display = kws.slice(0, 5);
-                  const more = kws.length - display.length;
-                  if (!kws.length) return null;
-                  return (
-                    <div className="log-keywords" style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 2 }}>
-                      {display.map((k) => (
-                        <span key={k} className="keyword-tag">{k}</span>
-                      ))}
-                      {more > 0 && <span className="keyword-tag">+{more}</span>}
-                    </div>
+                    if ((savedKeywordHitsByDate[key] || []).length) classes.push('has-search-keyword');
+                    return classes.join(' ');
+                  }}
+                  tileContent={({ date, view }) => {
+                    if (view !== 'month') return null;
+                    const key = moment(date).format('YYYY-MM-DD');
+                    const kws = savedKeywordHitsByDate[key] || [];
+                    const display = kws.slice(0, 5);
+                    const more = kws.length - display.length;
+                    if (!kws.length) return null;
+                    return (
+                      <div className="log-keywords" style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 2 }}>
+                        {display.map((k) => (
+                          <span key={k} className="keyword-tag">{k}</span>
+                        ))}
+                        {more > 0 && <span className="keyword-tag">+{more}</span>}
+                      </div>
                     );
                   }}
                 />
+              </div>
                 <div className="mt-3 small text-muted">
                   선택한 날짜: {moment(selectedDate).format('YYYY년 M월 D일 (ddd)')}
                 </div>

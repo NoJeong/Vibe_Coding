@@ -372,6 +372,52 @@ body {
   box-shadow: inset 0 0 0 2px rgba(106, 166, 248, 0.32);
 }
 
+.calendar-swipe-area {
+  touch-action: pan-y;
+}
+
+.calendar-month-toolbar .btn {
+  min-width: 88px;
+}
+
+.calendar-month-toolbar .fw-semibold {
+  font-size: 1rem;
+}
+
+.calendar-month-hint {
+  line-height: 1.35;
+}
+
+.voice-calendar.calendar-animate-next {
+  animation: calendarSlideNext 280ms ease;
+}
+
+.voice-calendar.calendar-animate-prev {
+  animation: calendarSlidePrev 280ms ease;
+}
+
+@keyframes calendarSlideNext {
+  from {
+    transform: translateX(32px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes calendarSlidePrev {
+  from {
+    transform: translateX(-32px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 /* Active (selected) day */
 .react-calendar__tile--active {
   background: transparent !important;
