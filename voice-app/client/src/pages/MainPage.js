@@ -6,6 +6,7 @@ import { ensureMockData, SAVED_KEYWORDS_KEY, STORAGE_KEY } from '../mockData';
 import 'moment/locale/ko';
 import 'react-calendar/dist/Calendar.css';
 import { useNavigate } from 'react-router-dom';
+import BannerAd from '../components/BannerAd';
 
 // 로컬스토리지에서 읽어 온 값을 정리하는 보조 함수
 const safeParseLogs = (source) => {
@@ -353,6 +354,7 @@ const MainPage = () => {
                 </div>
               </Card.Body>
             </Card>
+            <BannerAd />
           </Stack>
         </Col>
       </Row>

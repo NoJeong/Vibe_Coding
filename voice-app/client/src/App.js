@@ -5,7 +5,6 @@ import { Toaster, toast } from "react-hot-toast";
 import { Capacitor } from "@capacitor/core";
 import { AdMob } from "@capacitor-community/admob";
 import Header from "./components/Header";
-import BannerAd from "./components/BannerAd";
 import MainPage from "./pages/MainPage";
 import RecordsPage from "./pages/RecordsPage";
 import LogDetailPage from "./pages/LogDetailPage";
@@ -106,7 +105,7 @@ function App() {
       <Toaster position="top-right" />
       <Header />
       <main className="app-main">
-        <Container fluid className="mt-4 px-3 px-lg-5">
+        <Container fluid className="mt-4 px-0">
           <Routes>
             <Route path="/" element={<MainPage />} />
             <Route path="/records" element={<RecordsPage />} />
@@ -119,7 +118,6 @@ function App() {
       </main>
       {/* 음성 입력 모드가 활성화된 새 기록 작성 페이지로 이동하는 플로팅 버튼 */}
 
-      <BannerAd />
       <Link to={{ pathname: "/new-log", search: "?voice=true" }} className="fab" aria-label="음성 기록 추가">
         +
       </Link>

@@ -4,15 +4,15 @@
   --text: #333333;
   --surface: #FFFFFF;
   --border: #E6E9EF;
-  --primary: #6AA6F8; /* softer primary */
+  --primary: #6AA6F8;
   --primary-hover: #4F8BE3;
-  --calendar-day-log: #F3F6FD; /* pastel blue */
-  --calendar-day-keyword: #F2FAF6; /* pastel mint */
-  --calendar-day-search: #FFF6EC; /* pastel peach */
-  --calendar-hover: #F1F6FF; /* softer hover pastel */
-  --calendar-active: #EAF2FF; /* selected day pastel */
+  --calendar-day-log: #F3F6FD;
+  --calendar-day-keyword: #F2FAF6;
+  --calendar-day-search: #FFF6EC;
+  --calendar-hover: #F1F6FF;
+  --calendar-active: #EAF2FF;
   --calendar-active-border: #D6E6FF;
-  --calendar-today: #FFF4E8; /* subtle today tint */
+  --calendar-today: #FFF4E8;
   --calendar-today-border: #FFE1C2;
   --keyword-tag-bg: #FFFFFF;
   --keyword-tag-border: #E6E9EF;
@@ -23,7 +23,9 @@
   --calendar-log-low: #E4EDFF;
   --calendar-log-mid: #CADBFF;
   --calendar-log-high: #A5C4FF;
+  --banner-height: 0px;
 }
+
 
 [data-theme='dark'] {
   --bg: #121417;
@@ -213,7 +215,7 @@ body {
   background-color: var(--surface);
   border-radius: 16px !important;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1) !important;
-  padding: 30px !important;
+  padding: 30px 0 !important;
 }
 
 /* General styling for rounded corners and shadows */
@@ -503,7 +505,7 @@ body {
 .fab {
   position: fixed;
   right: 20px;
-  bottom: 24px;
+  bottom: calc(24px + var(--banner-height, 0px));
   z-index: 1000;
   width: 56px;
   height: 56px;
@@ -516,9 +518,29 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
   text-decoration: none;
 }
+
+.fab:focus,
+.fab:active,
+.fab:hover,
+.fab:visited {
+  text-decoration: none;
+}
+
+.fab::after {
+  content: "+";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1;
+}
+
 .fab:focus, .fab:active, .fab:hover, .fab:visited { text-decoration: none; }
 .fab::after {
   content: "+";
@@ -532,7 +554,6 @@ body {
   line-height: 1;
 }
 .fab:hover { background: var(--primary-hover); }
-
 /* Swipe actions on list items */
 .swipe-container { position: relative; overflow: hidden; }
 .swipe-content { transition: transform 0.2s ease; }
@@ -543,6 +564,61 @@ body {
   gap: 4px; padding: 8px;
 }
 .swipe-actions .btn { height: 100%; align-self: stretch; }
+
+.inline-ad {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  background: var(--surface);
+}
+
+.inline-ad-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.inline-ad-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.inline-ad-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.inline-ad-title {
+  font-size: 1.05rem;
+  color: var(--text);
+}
+
+.inline-ad-desc {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.inline-ad-button {
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+}
+
+.inline-ad-button:focus,
+.inline-ad-button:hover {
+  background: var(--primary-hover);
+  color: #fff;
+}
 
 .header-logo {
   height: 55px;
@@ -560,10 +636,11 @@ body {
   padding-top: calc(env(safe-area-inset-top, 0) + 8px);
 }
 
-.app-main {
-  padding-top: calc(55px + env(safe-area-inset-top, 0) - 25px);
-  padding-bottom: env(safe-area-inset-bottom, 24px);
+.header-banner-slot {
+  width: 100%;
 }
+
+
 
 .react-calendar__tile abbr {
   display: block;
@@ -715,3 +792,28 @@ body {
     align-items: center;
   }
 }
+
+
+
+
+
+
+
+
+
+.banner-ad-slot {
+  width: 100%;
+  height: var(--banner-height, 0px);
+  min-height: var(--banner-height, 0px);
+  display: block;
+}
+
+
+
+
+
+.app-main {
+  padding-top: calc(55px + env(safe-area-inset-top, 0) - 25px);
+  padding-bottom: calc(env(safe-area-inset-bottom, 24px) + var(--banner-height, 0px) + 16px);
+}
+
