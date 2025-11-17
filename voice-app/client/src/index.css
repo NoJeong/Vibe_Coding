@@ -24,6 +24,7 @@
   --calendar-log-mid: #CADBFF;
   --calendar-log-high: #A5C4FF;
   --banner-height: 0px;
+  --header-height: 56px;
 }
 
 
@@ -505,7 +506,7 @@ body {
 .fab {
   position: fixed;
   right: 20px;
-  bottom: calc(24px + var(--banner-height, 0px));
+  bottom: 16px;
   z-index: 1000;
   width: 56px;
   height: 56px;
@@ -633,11 +634,35 @@ body {
 }
 
 .header-navbar {
-  padding-top: calc(env(safe-area-inset-top, 0) + 8px);
+  padding: 8px 0;
+  top: 0;
+  width: 100%;
+  position: fixed;
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  z-index: 1000;
 }
 
-.header-banner-slot {
+.header-navbar .header-inner {
+  min-height: var(--header-height, 72px);
+}
+.header-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+  z-index: 900;
+}
+.footer-banner-slot {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
   width: 100%;
+  pointer-events: none;
+  z-index: 950;
 }
 
 
@@ -813,7 +838,7 @@ body {
 
 
 .app-main {
-  padding-top: calc(55px + env(safe-area-inset-top, 0) - 25px);
-  padding-bottom: calc(env(safe-area-inset-bottom, 24px) + var(--banner-height, 0px) + 16px);
+  padding-top: calc(var(--header-height, 72px) - 10px);
+  padding-bottom: 0;
 }
 

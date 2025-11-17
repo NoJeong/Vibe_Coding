@@ -6,7 +6,6 @@ import { ensureMockData, SAVED_KEYWORDS_KEY, STORAGE_KEY } from '../mockData';
 import 'moment/locale/ko';
 import 'react-calendar/dist/Calendar.css';
 import { useNavigate } from 'react-router-dom';
-import BannerAd from '../components/BannerAd';
 
 // 로컬스토리지에서 읽어 온 값을 정리하는 보조 함수
 const safeParseLogs = (source) => {
@@ -52,7 +51,6 @@ const MainPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [modalDate, setModalDate] = useState(null);
   const [modalLogs, setModalLogs] = useState([]);
-  const lastClickRef = useRef({ dateKey: null, time: 0 });
   const swipeStartXRef = useRef(null);
   const slideTimeoutRef = useRef(null);
   const [calendarSlideDir, setCalendarSlideDir] = useState(null);
@@ -210,13 +208,7 @@ const MainPage = () => {
     const date = Array.isArray(value) ? value[0] : value;
     setSelectedDate(date);
     setCalendarActiveDate(new Date(date.getFullYear(), date.getMonth(), 1));
-    const key = moment(date).format('YYYY-MM-DD');
-    const now = Date.now();
-    const { dateKey, time } = lastClickRef.current;
-    if (dateKey === key && now - time < 500) {
-      openLogsModal(date);
-    }
-    lastClickRef.current = { dateKey: key, time: now };
+    openLogsModal(date);
   };
 
   return (
@@ -354,7 +346,6 @@ const MainPage = () => {
                 </div>
               </Card.Body>
             </Card>
-            <BannerAd />
           </Stack>
         </Col>
       </Row>

@@ -105,6 +105,7 @@ const Header = () => {
   };
 
   return (
+    <>
     <Navbar
       expand="lg"
       fixed="top"
@@ -168,6 +169,8 @@ const Header = () => {
         </Navbar.Collapse>
       </Container>
     </Navbar>
+    {expanded && <div className="header-backdrop" onClick={() => setExpanded(false)} />}
+    </>
   );
 };
 

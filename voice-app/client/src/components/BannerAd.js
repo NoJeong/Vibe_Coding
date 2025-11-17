@@ -8,7 +8,7 @@ import {
 } from '@capacitor-community/admob';
 
 const BANNER_AD_ID = 'ca-app-pub-9352878858822070/4752124646';
-const DEFAULT_HEIGHT = 50;
+const DEFAULT_HEIGHT = 0;
 let admobInitPromise;
 
 const ensureAdMobReady = async () => {
@@ -43,13 +43,42 @@ const BannerAd = () => {
     if (!Capacitor.isPluginAvailable('AdMob')) return undefined;
     let canceled = false;
     let sizeListener;
+    let loadListener;
+    let failListener;
+
+    const registerBannerListeners = async () => {
+      sizeListener = await AdMob.addListener(BannerAdPluginEvents.SizeChanged, () => {
+        if (canceled) return;
+        setShouldRender(true);
+      });
+
+      loadListener = await AdMob.addListener(BannerAdPluginEvents.Loaded, () => {
+        if (canceled) return;
+        setShouldRender(true);
+      });
+
+      failListener = await AdMob.addListener(BannerAdPluginEvents.FailedToLoad, () => {
+        if (canceled) return;
+        setShouldRender(false);
+        setBannerHeight(0);
+      });
+    };
+
+    const listenersReady = registerBannerListeners().catch((error) => {
+      // eslint-disable-next-line no-console
+      console.warn('Failed to register AdMob banner listeners', error);
+      setShouldRender(false);
+      setBannerHeight(0);
+    });
 
     const showBanner = async () => {
+      await listenersReady;
       const ready = await ensureAdMobReady();
       if (!ready || canceled) return;
       try {
-        sizeListener?.remove();
         await AdMob.hideBanner().catch(() => {});
+        setShouldRender(true);
+        setBannerHeight(DEFAULT_HEIGHT);
         await AdMob.showBanner({
           adId: BANNER_AD_ID,
           adSize: BannerAdSize.ADAPTIVE_BANNER,
@@ -57,13 +86,9 @@ const BannerAd = () => {
           position: BannerAdPosition.BOTTOM_CENTER,
           margin: 0,
         });
-        setShouldRender(true);
-        setBannerHeight(DEFAULT_HEIGHT);
-        sizeListener = AdMob.addListener(BannerAdPluginEvents.SizeChanged, (info) => {
-          const nextHeight = info?.height || DEFAULT_HEIGHT;
-          setBannerHeight(nextHeight);
-        });
       } catch (error) {
+        if (canceled) return;
+        if (canceled) return;
         setShouldRender(false);
         setBannerHeight(0);
         // eslint-disable-next-line no-console
@@ -86,6 +111,8 @@ const BannerAd = () => {
     return () => {
       canceled = true;
       sizeListener?.remove();
+      loadListener?.remove();
+      failListener?.remove();
       setShouldRender(false);
       setBannerHeight(0);
       if (typeof window !== 'undefined') {
