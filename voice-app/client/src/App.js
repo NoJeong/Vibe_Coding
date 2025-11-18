@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Container } from "react-bootstrap";
 import { Toaster, toast } from "react-hot-toast";
@@ -11,9 +11,12 @@ import RecordsPage from "./pages/RecordsPage";
 import LogDetailPage from "./pages/LogDetailPage";
 import LogForm from "./pages/LogForm";
 import NotificationSettingsPage from "./pages/NotificationSettingsPage";
+import InterstitialAdPage from "./pages/InterstitialAdPage";
+import useExitInterstitialAd from "./hooks/useExitInterstitialAd";
 import "./index.css";
 
 function App() {
+  const showExitInterstitialAd = useExitInterstitialAd();
   /**
    * 애플리케이션 루트 컴포넌트.
    * - Capacitor 네이티브 환경에서는 매일 저녁 9시에 기록 알림을 예약한다.
@@ -55,7 +58,7 @@ function App() {
     // 홈 화면에서 2초 안에 두 번 눌러야 종료되도록 마지막 누름 시각을 기록한다.
 
     let lastBackAt = 0;
-    const onBack = ({ canGoBack }) => {
+    const onBack = async ({ canGoBack }) => {
       const isRoot = window.location.pathname === "/" && !canGoBack;
       if (!isRoot) {
         try {
@@ -64,17 +67,26 @@ function App() {
         return;
       }
       const now = Date.now();
-      if (now - lastBackAt < 2000) {
-        try {
-          capacitorApp.exitApp?.();
-        } catch (_) {}
-      } else {
-        lastBackAt = now;
-        try {
-          toast.dismiss();
-          toast("Press back again to exit", { duration: 1500 });
-        } catch (_) {}
-      }
+        if (now - lastBackAt < 2000) {
+          const shown = await showExitInterstitialAd({
+            onDismiss: () => {
+              try {
+                capacitorApp.exitApp?.();
+              } catch (_) {}
+            },
+          });
+          if (!shown) {
+            try {
+              capacitorApp.exitApp?.();
+            } catch (_) {}
+          }
+        } else {
+          lastBackAt = now;
+          try {
+            toast.dismiss();
+            toast("Press back again to exit", { duration: 1500 });
+          } catch (_) {}
+        }
     };
 
     // 구독 핸들을 기억해 컴포넌트 언마운트 시 리스너를 정리한다.
@@ -85,7 +97,7 @@ function App() {
         remove.remove();
       } catch (_) {}
     };
-  }, []);
+  }, [showExitInterstitialAd]);
 
   React.useEffect(() => {
     if (!Capacitor.isPluginAvailable("AdMob")) return;
@@ -114,6 +126,7 @@ function App() {
             <Route path="/new-log" element={<LogForm />} />
             <Route path="/edit-log/:id" element={<LogForm />} />
             <Route path="/settings/notifications" element={<NotificationSettingsPage />} />
+            <Route path="/ads/interstitial" element={<InterstitialAdPage />} />
           </Routes>
         </Container>
       </main>

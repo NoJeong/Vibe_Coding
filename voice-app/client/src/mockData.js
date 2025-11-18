@@ -1,4 +1,4 @@
-﻿export const LOGS_PER_PAGE = 20;
+export const LOGS_PER_PAGE = 20;
 export const STORAGE_KEY = "voiceLogs_v4";
 export const SAVED_KEYWORDS_KEY = "savedKeywords_v4";
 

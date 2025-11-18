@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Navbar, Nav, Container, Button } from "react-bootstrap";
 import { Link, useLocation } from "react-router-dom";
 import { calculateLogStats, getLogsFromStorage, LOGS_UPDATED_EVENT } from "../utils/logStats";
@@ -136,6 +136,14 @@ const Header = () => {
               onClick={() => setExpanded(false)}
             >
               전체 기록 보기
+            </Nav.Link>
+            <Nav.Link
+              as={Link}
+              to="/ads/interstitial"
+              className="header-nav-link ms-3 fw-bold fs-6 text-decoration-none py-0 my-0"
+              onClick={() => setExpanded(false)}
+            >
+              전면 광고 페이지
             </Nav.Link>
             <Nav.Link
               as={Link}

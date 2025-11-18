@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Badge, Button, Card, Form, ListGroup, Spinner } from 'react-bootstrap';
 import moment from 'moment';
@@ -90,6 +90,9 @@ const RecordsPage = () => {
     return matches.map((s) => s.slice(1).toLowerCase());
   }, [trimmedSearch]);
 
+  const sortedLogsLength = sortedLogs.length;
+  const selectedKeywordSignature = useMemo(() => selectedKeywords.join('|'), [selectedKeywords]);
+
   // 검색어와 선택된 키워드 조건을 모두 반영한 결과만 필터링한다.
   const filteredLogs = useMemo(() => {
     return sortedLogs.filter((log) => {
@@ -112,7 +115,7 @@ const RecordsPage = () => {
   useEffect(() => {
     // 검색 조건이 바뀔 때마다 페이지네이션을 처음부터 다시 보여준다.
     setVisibleCount(LOGS_PER_PAGE);
-  }, [trimmedSearch, sortedLogs.length, selectedKeywords.join('|')]);
+  }, [trimmedSearch, sortedLogsLength, selectedKeywordSignature]);
 
   const visibleLogs = useMemo(() => filteredLogs.slice(0, visibleCount), [filteredLogs, visibleCount]);
   const hasMore = visibleCount < filteredLogs.length;
