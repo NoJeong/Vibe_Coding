@@ -1,0 +1,18 @@
+# Folders and files containing sensitive information
+/keys/
+/keystore.properties
+
+# Temporary folder
+/temp/
+
+# Android Studio IDE files
+.idea/
+.gradle/
+*.iml
+
+# Build output
+/build
+*/build/
+
+# Local configuration
+local.properties
